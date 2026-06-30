@@ -1,0 +1,34 @@
+Smart Society / Apartment Management System
+Objective:
+Develop a complete enterprise-grade application using layered architecture with
+PostgreSQL, ASP.NET Core Web API, and Angular frontend.
+
+Core Modules:
+• Residents
+• Visitors
+• Maintenance Billing
+• Facility Booking
+
+Key Features:
+• QR visitor entry
+• Push notifications
+
+Suggested Architecture:
+Angular Frontend → ASP.NET Core Web API → Service Layer → Repository Layer →
+PostgreSQL Database
+
+Azure Integration:
+• Azure Notification Hub
+
+Student Deliverables:
+• Requirement Document
+• ER Diagram
+• API Documentation
+• Angular Screens
+• Authentication & Authorization
+• CRUD APIs
+• Search & Pagination
+• Deployment Steps
+
+Phase 2 Enhancements:
+• Docker & Kubernetes

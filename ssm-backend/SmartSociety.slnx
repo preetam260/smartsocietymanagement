@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartSociety.API/SmartSociety.API.csproj" />
+  <Project Path="SmartSociety.Application/SmartSociety.Application.csproj" />
+  <Project Path="SmartSociety.Domain/SmartSociety.Domain.csproj" />
+  <Project Path="SmartSociety.Repository/SmartSociety.Repository.csproj" />
+</Solution>
