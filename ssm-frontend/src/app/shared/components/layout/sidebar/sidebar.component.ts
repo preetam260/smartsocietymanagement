@@ -40,8 +40,19 @@ export class SidebarComponent {
   visibleLinks = computed(() => {
     const role = this.auth.role();
     if (!role) return [];
-    return this.allLinks.filter(link =>
-      link.roles === 'all' || link.roles.includes(role)
-    );
+    return this.allLinks.filter(link => link.roles === 'all' || link.roles.includes(role))
+    .map(link => {
+      let path = link.path;
+      if(link.path === '/bills' && (role === 'Resident' || role === 'Owner')) {
+        path = '/bills/my';
+      }
+      else if(link.path === '/visitors' && (role === 'Resident' || role === 'Owner')) {
+        path = '/visitors/my';
+      }
+      else if (link.path === '/apartments' && (role === 'Owner' || role == 'Resident')){
+        path = '/apartments/my';
+      }
+      return { ...link, path }; 
+    })
   });
 }

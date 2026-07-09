@@ -40,10 +40,18 @@ export class VisitorListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
+    const role = this.auth.role();
+    if(role === 'SecurityStaff') {
+      this.svc.getByStatus('CheckedIn').subscribe({
+        next: v => { this.visitors.set(v); this.loading.set(false); },
+        error: () => this.loading.set(false)
+      })
+    } else {
     this.svc.getMyVisitors().subscribe({
       next: v => { this.visitors.set(v); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
+  }
   }
 
   deny(v: VisitorResponse) {

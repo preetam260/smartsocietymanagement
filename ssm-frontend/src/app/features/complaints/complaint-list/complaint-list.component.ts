@@ -76,8 +76,8 @@ export class ComplaintListComponent implements OnInit {
 
   availableTransitions(c: ComplaintResponse): ComplaintStatus[] {
     const map: Record<ComplaintStatus, ComplaintStatus[]> = {
-      Open: ['InProgress', 'Resolved', 'Rejected'],
-      InProgress: ['Resolved', 'Rejected'],
+      Open: ['InProgress', 'Resolved', 'Rejected', 'Closed'],
+      InProgress: ['Resolved', 'Rejected', 'Closed'],
       Resolved: [],
       Rejected: [],
       Closed: [],
