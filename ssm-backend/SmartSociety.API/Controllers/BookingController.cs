@@ -1,0 +1,107 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SmartSociety.Application.DTOs;
+using SmartSociety.Application.Interfaces;
+
+namespace SmartSociety.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class BookingController : ControllerBase
+{
+    private readonly IBookingService _bookingService;
+
+    public BookingController(IBookingService bookingService)
+    {
+        _bookingService = bookingService;
+    }
+
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<BookingResponseDto>> GetById(Guid id)
+    {
+        var booking = await _bookingService.GetByIdAsync(id);
+        // Non-admin users can only view their own bookings
+        if (!User.IsInRole("Admin") && booking.UserId != GetUserId())
+            return Forbid();
+        return Ok(booking);
+    }
+
+    [HttpGet("facility/{facilityId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResult<BookingResponseDto>>> GetByFacilityId(Guid facilityId, [FromQuery] PaginationQuery query)
+    {
+        var result = await _bookingService.GetByFacilityIdPagedAsync(facilityId, query);
+        return Ok(result);
+    }
+
+    [HttpGet("my")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetMyBookings()
+    {
+        var bookings = await _bookingService.GetMyBookingsAsync(GetUserId());
+        return Ok(bookings);
+    }
+
+    [HttpGet("user/{userId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetByUserId(Guid userId)
+    {
+        var bookings = await _bookingService.GetByUserIdAsync(userId);
+        return Ok(bookings);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<BookingResponseDto>> Create([FromBody] CreateBookingDto dto)
+    {
+        var booking = await _bookingService.CreateAsync(dto, GetUserId());
+        return CreatedAtAction(nameof(GetById), new { id = booking.Id }, booking);
+    }
+
+    [HttpPost("{id:guid}/create-order")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<CreatePaymentOrderResponseDto>> CreatePaymentOrder(Guid id)
+    {
+        var order = await _bookingService.CreatePaymentOrderAsync(id, GetUserId());
+        return Ok(order);
+    }
+
+    [HttpPost("{id:guid}/verify-payment")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<BookingResponseDto>> VerifyPayment(Guid id, [FromBody] VerifyBookingPaymentDto dto)
+    {
+        dto.BookingId = id;
+        var booking = await _bookingService.VerifyPaymentAsync(dto);
+        return Ok(booking);
+    }
+
+    [HttpPatch("{id:guid}/cancel")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<IActionResult> Cancel(Guid id)
+    {
+        await _bookingService.CancelAsync(id, GetUserId());
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/complete")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Complete(Guid id)
+    {
+        await _bookingService.CompleteAsync(id);
+        return NoContent();
+    }
+
+    [HttpPost("expire-holds")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ExpireHolds()
+    {
+        await _bookingService.ExpireHoldsAsync();
+        return NoContent();
+    }
+}

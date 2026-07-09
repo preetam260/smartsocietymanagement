@@ -1,0 +1,151 @@
+
+
+# macOS
+.DS_Store
+
+# Angular
+node_modules/
+.angular/
+dist/
+coverage/
+
+# .NET
+bin/
+obj/
+
+# VS / VS Code
+.vs/
+.vscode/
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# User-specific
+*.user
+*.suo
+
+# JetBrains
+.idea/
+
+# Package locks (optional)
+package-lock.json
+
+# Angular cache
+.cache/
+
+# Build outputs
+out/
+publish/
+
+# Kubernetes / Docker temp
+*.pid
+*.tmp
+=======
+# =========================
+# Build folders
+# =========================
+bin/
+obj/
+out/
+
+# =========================
+# User-specific files
+# =========================
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Visual Studio
+# =========================
+.vs/
+
+# =========================
+# Rider / JetBrains
+# =========================
+.idea/
+*.sln.iml
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+appsettings.Development.json
+appsettings.Local.json
+
+# =========================
+# NuGet
+# =========================
+*.nupkg
+packages/
+.nuget/
+
+# =========================
+# Test results
+# =========================
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# =========================
+# Publish output
+# =========================
+publish/
+artifacts/
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Azure / deployment
+# =========================
+*.publishsettings
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# Database files
+# =========================
+*.mdf
+*.ldf
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Secrets
+# =========================
+secrets.json
+
+
+SmartSociety.TestConsole/

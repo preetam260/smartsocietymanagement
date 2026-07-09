@@ -1,0 +1,89 @@
+.sidebar {
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--navbar-height));
+      position: sticky;
+      top: var(--navbar-height);
+      flex-shrink: 0;
+    }
+    .sidebar-overlay {
+      display: none;
+    }
+    .sidebar-content {
+      width: var(--sidebar-width);
+      height: 100%;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border-light);
+      overflow-y: auto;
+      padding: var(--spacing-md) 0;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 var(--spacing-sm);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: 0.625rem var(--spacing-md);
+      border-radius: var(--radius);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .nav-link:hover {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .nav-link.active {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .nav-icon {
+      font-size: 1.125rem;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: var(--navbar-height);
+        left: 0;
+        z-index: 200;
+        width: 100%;
+        pointer-events: none;
+      }
+      .sidebar.sidebar-open {
+        pointer-events: auto;
+      }
+      .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: var(--navbar-height);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.4);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .sidebar.sidebar-open .sidebar-overlay {
+        opacity: 1;
+      }
+      .sidebar-content {
+        position: relative;
+        z-index: 1;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.sidebar-open .sidebar-content {
+        transform: translateX(0);
+      }
+    }

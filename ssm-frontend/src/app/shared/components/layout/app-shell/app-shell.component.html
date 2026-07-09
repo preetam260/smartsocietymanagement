@@ -1,0 +1,7 @@
+<app-navbar (sidebarToggle)="onToggleSidebar()" />
+    <div class="shell-body">
+      <app-sidebar [open]="sidebarOpen()" (linkClicked)="closeSidebar()" />
+      <main class="main-content">
+        <router-outlet />
+      </main>
+    </div>

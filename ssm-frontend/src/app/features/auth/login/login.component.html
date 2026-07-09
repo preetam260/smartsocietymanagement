@@ -1,0 +1,36 @@
+<div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>SmartSociety</h1>
+          <p>Sign in to your account</p>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" type="email" class="form-control" formControlName="email" placeholder="you@example.com">
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <div class="form-error">Valid email is required</div>
+            }
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="password" class="form-control" formControlName="password" placeholder="Enter your password">
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <div class="form-error">Password is required</div>
+            }
+          </div>
+          @if (showPasswordNotSet()) {
+            <div class="password-hint">
+              <strong>Password not set.</strong> This appears to be your first login.
+              <a routerLink="/forgot-password">Set your password here →</a>
+            </div>
+          }
+          <button type="submit" class="btn btn-primary w-full btn-lg" [disabled]="form.invalid || loading()">
+            {{ loading() ? 'Signing in...' : 'Sign In' }}
+          </button>
+        </form>
+        <div class="auth-footer">
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </div>
+      </div>
+    </div>

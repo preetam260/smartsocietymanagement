@@ -1,0 +1,25 @@
+<div class="page-header">
+      <h1>My Visitors</h1>
+      <a routerLink="/visitors/register" class="btn btn-primary">+ Register Visitor</a>
+    </div>
+    @if (loading()) { <app-loading-spinner /> }
+    @else if (!visitors().length) { <app-empty-state message="No visitors registered" /> }
+    @else {
+      <div class="card"><div class="card-body" style="padding:0">
+        <div class="table-wrapper"><table>
+          <thead><tr><th>Name</th><th>Email</th><th>Purpose</th><th>ETA</th><th>Status</th><th>QR Token</th></tr></thead>
+          <tbody>
+            @for (v of visitors(); track v.id) {
+              <tr>
+                <td>{{ v.name }}</td>
+                <td>{{ v.email }}</td>
+                <td>{{ v.purpose }}</td>
+                <td>{{ v.eta | date:'short' }}</td>
+                <td><app-status-badge [status]="v.status" /></td>
+                <td><code class="text-xs">{{ v.qrToken | slice:0:20 }}...</code></td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+      </div></div>
+    }

@@ -1,0 +1,45 @@
+<div class="page-header">
+      <h1>Apartments</h1>
+      @if (auth.role() === 'Admin') {
+        <a routerLink="/apartments/new" class="btn btn-primary">+ Add Apartment</a>
+      }
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="search-bar">
+          <input type="text" class="form-control" placeholder="Search apartments..." (input)="onSearch($event)">
+        </div>
+      </div>
+      <div class="card-body" style="padding:0">
+        @if (loading()) {
+          <app-loading-spinner />
+        } @else if (!pagedResult()?.items?.length) {
+          <app-empty-state message="No apartments found" />
+        } @else {
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Block</th><th>Floor</th><th>Number</th><th>Owner</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (apt of pagedResult()!.items; track apt.id) {
+                  <tr>
+                    <td>{{ apt.block }}</td>
+                    <td>{{ apt.floor }}</td>
+                    <td>{{ apt.number }}</td>
+                    <td>{{ apt.ownerName }}</td>
+                    <td class="actions">
+                      @if (auth.role() === 'Admin') {
+                        <button class="btn btn-danger btn-sm" (click)="confirmDelete(apt)">Delete</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (pagedResult(); as pr) {
+            <app-pagination [pageNumber]="pr.pageNumber" [totalPages]="pr.totalPages" [hasNext]="pr.hasNextPage" [hasPrevious]="pr.hasPreviousPage" (pageChange)="goToPage($event)" />
+          }
+        }
+      </div>
+    </div>
+    <app-confirm-dialog [open]="showDialog()" [message]="'Delete apartment ' + (toDelete()?.block ?? '') + '-' + (toDelete()?.number ?? '') + '?'" (confirmed)="onDeleteConfirmed()" (cancelled)="showDialog.set(false)" />

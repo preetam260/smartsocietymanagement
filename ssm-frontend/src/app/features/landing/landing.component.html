@@ -1,0 +1,71 @@
+<main class="landing">
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🏙️ Smart Society Management</div>
+      <h1 class="hero-title">Your Society,<br><span class="gradient-text">Managed Smartly</span></h1>
+      <p class="hero-subtitle">
+        A unified platform for residents, owners, admins, and security staff —
+        real-time notifications, digital billing, facility bookings, and visitor management in one place.
+      </p>
+      <div class="hero-cta">
+        <a routerLink="/login" class="btn-hero-primary">Get Started →</a>
+        <a href="#features" class="btn-hero-ghost">Learn More</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <div class="hc-row"><span class="hc-icon">📊</span><span>Live dashboard updates</span></div>
+        <div class="hc-row"><span class="hc-icon">🔔</span><span>Real-time notifications</span></div>
+        <div class="hc-row"><span class="hc-icon">💰</span><span>Digital bill payments</span></div>
+        <div class="hc-row"><span class="hc-icon">🚶</span><span>QR visitor check-in</span></div>
+        <div class="hc-row"><span class="hc-icon">📅</span><span>Facility bookings</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Everything Your Society Needs</h2>
+      <p>Built for all stakeholders — no feature gap, no role confusion.</p>
+    </div>
+    <div class="features-grid">
+      @for (f of features; track f.title) {
+        <div class="feature-card">
+          <span class="feature-icon">{{ f.icon }}</span>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="roles">
+    <div class="section-header">
+      <h2>Built for Every Role</h2>
+      <p>Each user type gets a tailored experience with the right permissions.</p>
+    </div>
+    <div class="roles-grid">
+      @for (r of roles; track r.title) {
+        <div class="role-card">
+          <span class="role-icon">{{ r.icon }}</span>
+          <h3>{{ r.title }}</h3>
+          <p>{{ r.description }}</p>
+          <ul>
+            @for (h of r.highlights; track h) {
+              <li>✓ {{ h }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2>Ready to get started?</h2>
+    <p>Sign in to your SmartSociety account.</p>
+    <a routerLink="/login" class="btn-hero-primary">Sign In →</a>
+  </section>
+
+</main>

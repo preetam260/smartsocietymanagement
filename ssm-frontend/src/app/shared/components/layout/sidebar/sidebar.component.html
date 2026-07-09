@@ -1,0 +1,17 @@
+<aside class="sidebar" [class.sidebar-open]="open()">
+      <div class="sidebar-overlay" (click)="linkClicked.emit()"></div>
+      <div class="sidebar-content">
+        <nav class="sidebar-nav">
+          @for (link of visibleLinks(); track link.path) {
+            <a [routerLink]="link.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: link.path === '/dashboard' }"
+              class="nav-link"
+              (click)="linkClicked.emit()">
+              <span class="nav-icon">{{ link.icon }}</span>
+              <span class="nav-label">{{ link.label }}</span>
+            </a>
+          }
+        </nav>
+      </div>
+    </aside>

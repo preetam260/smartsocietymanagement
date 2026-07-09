@@ -1,0 +1,58 @@
+<div class="page-header">
+  <h1>{{ isEdit() ? 'Edit Facility' : 'Add Facility' }}</h1>
+  <a routerLink="/facilities" class="btn btn-outline">← Back</a>
+</div>
+<div class="card"><div class="card-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input id="name" class="form-control" formControlName="name" placeholder="e.g. Swimming Pool">
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <div class="form-error">Facility name is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="hourlyRate">Hourly Rate (₹)</label>
+        <input id="hourlyRate" type="number" class="form-control" formControlName="hourlyRate" min="0">
+        @if (form.controls.hourlyRate.invalid && form.controls.hourlyRate.touched) {
+          @if (form.controls.hourlyRate.errors?.['required']) {
+            <div class="form-error">Hourly rate is required</div>
+          } @else if (form.controls.hourlyRate.errors?.['min']) {
+            <div class="form-error">Hourly rate cannot be negative</div>
+          }
+        }
+      </div>
+      <div class="form-group">
+        <label for="capacity">Capacity</label>
+        <input id="capacity" type="number" class="form-control" formControlName="capacity" min="1">
+        @if (form.controls.capacity.invalid && form.controls.capacity.touched) {
+          @if (form.controls.capacity.errors?.['required']) {
+            <div class="form-error">Capacity is required</div>
+          } @else if (form.controls.capacity.errors?.['min']) {
+            <div class="form-error">Capacity must be at least 1</div>
+          }
+        }
+      </div>
+      <div class="form-group">
+        <label for="isActive">Status</label>
+        <select id="isActive" class="form-control" formControlName="isActive">
+          <option [value]="true">Active</option>
+          <option [value]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" class="form-control" formControlName="description" rows="3" placeholder="Brief description of the facility"></textarea>
+      @if (form.controls.description.invalid && form.controls.description.touched) {
+        <div class="form-error">Description is required</div>
+      }
+    </div>
+    <div class="mt-lg">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
+        {{ loading() ? 'Saving...' : (isEdit() ? 'Update' : 'Create') }}
+      </button>
+    </div>
+  </form>
+</div></div>

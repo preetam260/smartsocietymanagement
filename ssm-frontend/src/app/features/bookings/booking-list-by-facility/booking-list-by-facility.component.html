@@ -1,0 +1,36 @@
+<div class="page-header">
+      <h1>Facility Bookings</h1>
+      <div class="flex gap-sm">
+        <button class="btn btn-warning" (click)="showExpireHolds.set(true)">Expire Holds</button>
+        <a routerLink="/facilities" class="btn btn-outline">← Facilities</a>
+      </div>
+    </div>
+    <div class="card"><div class="card-body" style="padding:0">
+      @if (loading()) { <app-loading-spinner /> }
+      @else if (!pagedResult()?.items?.length) { <app-empty-state message="No bookings for this facility" /> }
+      @else {
+        <div class="table-wrapper"><table>
+          <thead><tr><th>User</th><th>Date</th><th>Time</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            @for (b of pagedResult()!.items; track b.id) {
+              <tr>
+                <td>{{ b.userName }}</td>
+                <td>{{ b.date | date:'mediumDate' }}</td>
+                <td>{{ b.startTime }} - {{ b.endTime }}</td>
+                <td>{{ b.totalCost | currency:'INR' }}</td>
+                <td><app-status-badge [status]="b.status" /></td>
+                <td class="actions">
+                  @if (b.status === 'Confirmed') {
+                    <button class="btn btn-success btn-sm" (click)="markComplete(b)">Mark Complete</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+        @if (pagedResult(); as pr) {
+          <app-pagination [pageNumber]="pr.pageNumber" [totalPages]="pr.totalPages" [hasNext]="pr.hasNextPage" [hasPrevious]="pr.hasPreviousPage" (pageChange)="load($event)" />
+        }
+      }
+    </div></div>
+    <app-confirm-dialog [open]="showExpireHolds()" message="Expire all held bookings that have passed their hold time? This cannot be undone." (confirmed)="expireHolds()" (cancelled)="showExpireHolds.set(false)" />

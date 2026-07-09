@@ -1,0 +1,41 @@
+<div class="page-header">
+  <h1>Notifications</h1>
+  <button type="button" class="btn btn-outline" (click)="markAllRead()">Mark All as Read</button>
+</div>
+<div class="card">
+  <div class="search-bar">
+    <input type="text" class="form-control" placeholder="Search notifications..." (input)="onSearch($event)">
+  </div>
+  <div class="card-body">
+    <ng-container *ngIf="loading() && !firstLoadDone(); else notLoading">
+      <app-loading-spinner></app-loading-spinner>
+    </ng-container>
+
+    <ng-template #notLoading>
+      <ng-container *ngIf="items().length === 0; else notificationList">
+        <app-empty-state message="No notifications"></app-empty-state>
+      </ng-container>
+    </ng-template>
+
+    <ng-template #notificationList>
+      <div class="notification-list">
+        <div *ngFor="let n of items(); trackBy: trackByNotification" class="notification-item" [class.unread]="!n.isRead" (click)="markRead(n)">
+          <div class="notification-content">
+            <h4>{{ n.title }}</h4>
+            <p>{{ n.message }}</p>
+            <span class="text-xs text-muted">{{ n.createdAt | date:'medium' }}</span>
+          </div>
+          <div *ngIf="!n.isRead" class="unread-dot"></div>
+        </div>
+      </div>
+
+      <app-pagination
+        [pageNumber]="pagedResult().pageNumber"
+        [totalPages]="pagedResult().totalPages"
+        [hasNext]="pagedResult().hasNextPage"
+        [hasPrevious]="pagedResult().hasPreviousPage"
+        (pageChange)="gotoPage($event)">
+      </app-pagination>
+    </ng-template>
+  </div>
+</div>

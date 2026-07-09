@@ -1,0 +1,15 @@
+<div class="pagination">
+  <button type="button" class="btn btn-outline btn-sm"
+          [disabled]="!hasPrevious()"
+          (click)="pageChange.emit(pageNumber() - 1)">
+    ← Prev
+  </button>
+  <span class="page-info">
+    Page {{ pageNumber() }} of {{ totalPages() }}
+  </span>
+  <button type="button" class="btn btn-outline btn-sm"
+          [disabled]="!hasNext()"
+          (click)="pageChange.emit(pageNumber() + 1)">
+    Next →
+  </button>
+</div>

@@ -1,0 +1,45 @@
+<div class="page-header">
+      <h1>Bills Management</h1>
+      <div class="flex gap-sm">
+        <button class="btn btn-warning" (click)="confirmPenalties.set(true)" title="Scan overdue bills and apply penalties server-side">Apply Penalties</button>
+        <a routerLink="/bills/new" class="btn btn-primary">+ Create Bill</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="search-bar">
+          <input type="text" class="form-control" placeholder="Search bills..." (input)="onSearch($event)">
+        </div>
+      </div>
+      <div class="card-body" style="padding:0">
+        @if (loading()) { <app-loading-spinner /> }
+        @else if (!pagedResult()?.items?.length) { <app-empty-state message="No bills found" /> }
+        @else {
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Apartment</th><th>Billed To</th><th>Period</th><th>Base</th><th>Penalty</th><th>Total</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (b of pagedResult()!.items; track b.id) {
+                <tr>
+                  <td>{{ b.apartmentBlock }}-{{ b.apartmentNumber }}</td>
+                  <td>{{ b.billedToUserName }}</td>
+                  <td>{{ b.period }}</td>
+                  <td>{{ b.baseAmount | currency:'INR' }}</td>
+                  <td>{{ b.penalty | currency:'INR' }}</td>
+                  <td><strong>{{ b.total | currency:'INR' }}</strong></td>
+                  <td>{{ b.dueDate | date:'mediumDate' }}</td>
+                  <td><app-status-badge [status]="b.status" /></td>
+                  <td class="actions">
+                    <button class="btn btn-danger btn-sm" (click)="toDelete.set(b); showDelete.set(true)">Delete</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table></div>
+          @if (pagedResult(); as pr) {
+            <app-pagination [pageNumber]="pr.pageNumber" [totalPages]="pr.totalPages" [hasNext]="pr.hasNextPage" [hasPrevious]="pr.hasPreviousPage" (pageChange)="load($event)" />
+          }
+        }
+      </div>
+    </div>
+    <app-confirm-dialog [open]="showDelete()" message="Delete this bill?" (confirmed)="onDelete()" (cancelled)="showDelete.set(false)" />
+    <app-confirm-dialog [open]="confirmPenalties()" message="Apply penalties to all overdue bills? This action cannot be undone." (confirmed)="applyPenalties()" (cancelled)="confirmPenalties.set(false)" />

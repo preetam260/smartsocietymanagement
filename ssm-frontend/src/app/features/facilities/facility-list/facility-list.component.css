@@ -1,0 +1,9 @@
+.card-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: var(--spacing-lg); 
+}
+h3 { 
+    font-size: var(--font-size-lg); 
+    font-weight: 600; margin-bottom: var(--spacing-xs); 
+}

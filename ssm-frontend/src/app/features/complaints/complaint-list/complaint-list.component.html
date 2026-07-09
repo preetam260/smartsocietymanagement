@@ -1,0 +1,81 @@
+<div class="page-header">
+  <h1>{{ auth.role() === 'Admin' ? 'All Complaints' : 'My Complaints' }}</h1>
+  @if (auth.role() !== 'Admin') {
+    <a routerLink="/complaints/new" class="btn btn-primary">+ Submit Complaint</a>
+  }
+</div>
+<div class="card"><div class="card-body" style="padding:0">
+  @if (loading()) { <app-loading-spinner /> }
+  @else if (!complaints().length) { <app-empty-state message="No complaints found" /> }
+  @else {
+    <div class="table-wrapper"><table>
+      <thead><tr>
+        <th>Title</th><th>Apartment</th><th>Submitted By</th><th>Status</th><th>Date</th>
+        @if (auth.role() === 'Admin') { <th>Actions</th> }
+      </tr></thead>
+      <tbody>
+        @for (c of complaints(); track c.id) {
+          <tr>
+            <td>
+              <strong>{{ c.title }}</strong><br>
+              <span class="text-muted text-xs">{{ c.description | slice:0:80 }}...</span>
+              @if (c.adminResponse) {
+                <div class="text-xs text-muted mt-xs"><em>Admin: {{ c.adminResponse }}</em></div>
+              }
+            </td>
+            <td>{{ c.apartmentBlock }}-{{ c.apartmentNumber }}</td>
+            <td>{{ c.userName }}</td>
+            <td><app-status-badge [status]="c.status" /></td>
+            <td>{{ c.createdAt | date:'mediumDate' }}</td>
+            @if (auth.role() === 'Admin') {
+              <td class="actions">
+                @if (availableTransitions(c).length > 0) {
+                  <button class="btn btn-primary btn-sm" (click)="openStatusModal(c)">Update Status</button>
+                } @else {
+                  <span class="text-xs text-muted">{{ statusLabel(c.status) }}</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table></div>
+  }
+</div></div>
+
+@if (activeComplaint()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Update: {{ activeComplaint()!.title }}</h3>
+        <span class="text-sm text-muted">Current: {{ statusLabel(activeComplaint()!.status) }}</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="statusSelect">New Status</label>
+          <select id="statusSelect" class="form-control" [formControl]="statusForm.controls.status">
+            @for (s of availableTransitions(activeComplaint()!); track s) {
+              <option [value]="s">{{ statusLabel(s) }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="adminResponse">
+            Admin Response
+            @if (requiresResponse) { <span class="text-danger">*</span> }
+          </label>
+          <textarea id="adminResponse" class="form-control" [formControl]="statusForm.controls.adminResponse"
+            placeholder="{{ requiresResponse ? 'Required for resolving or rejecting' : 'Optional note for In Progress' }}"
+            rows="4"></textarea>
+          @if (requiresResponse && !statusForm.controls.adminResponse.value?.trim()) {
+            <div class="form-error">Response is required when resolving or rejecting.</div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitStatus()">Save</button>
+      </div>
+    </div>
+  </div>
+}

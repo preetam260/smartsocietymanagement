@@ -1,0 +1,31 @@
+<div class="page-header"><h1>My Bills</h1></div>
+    @if (loading()) { <app-loading-spinner /> }
+    @else if (!bills().length) { <app-empty-state message="No bills found" /> }
+    @else {
+      <div class="card"><div class="card-body" style="padding:0">
+        <div class="table-wrapper"><table>
+          <thead><tr><th>Apartment</th><th>Period</th><th>Total</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            @for (b of bills(); track b.id) {
+              <tr>
+                <td>{{ b.apartmentBlock }}-{{ b.apartmentNumber }}</td>
+                <td>{{ b.period }}</td>
+                <td><strong>{{ b.total | currency:'INR' }}</strong></td>
+                <td>{{ b.dueDate | date:'mediumDate' }}</td>
+                <td><app-status-badge [status]="b.status" /></td>
+                <td class="actions">
+                  @if (b.status === 'Unpaid' || b.status === 'Overdue') {
+                    <button class="btn btn-success btn-sm" [disabled]="paying()" (click)="payBill(b)">
+                      {{ paying() ? 'Processing...' : 'Pay Now' }}
+                    </button>
+                  }
+                  @if (b.paidAt) {
+                    <span class="text-xs text-muted">Paid {{ b.paidAt | date:'short' }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+      </div></div>
+    }

@@ -1,0 +1,56 @@
+<div class="page-header">
+  <h1>Create Bill</h1>
+  <a routerLink="/bills" class="btn btn-outline">← Back</a>
+</div>
+<div class="card"><div class="card-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="apartmentId">Apartment</label>
+        <select id="apartmentId" class="form-control" formControlName="apartmentId">
+          <option value="">Select apartment</option>
+          @for (a of apartments(); track a.id) {
+            <option [value]="a.id">{{ a.block }}-{{ a.number }} ({{ a.ownerName }})</option>
+          }
+        </select>
+        @if (form.controls.apartmentId.invalid && form.controls.apartmentId.touched) {
+          <div class="form-error">Please select an apartment</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="period">Period (MM-YYYY)</label>
+        <input id="period" class="form-control" formControlName="period" placeholder="e.g. 06-2026">
+        @if (form.controls.period.invalid && form.controls.period.touched) {
+          @if (form.controls.period.errors?.['required']) {
+            <div class="form-error">Period is required</div>
+          } @else if (form.controls.period.errors?.['pattern']) {
+            <div class="form-error">Period must be in MM-YYYY format (e.g. 07-2026)</div>
+          }
+        }
+      </div>
+      <div class="form-group">
+        <label for="baseAmount">Base Amount (₹)</label>
+        <input id="baseAmount" type="number" class="form-control" formControlName="baseAmount" placeholder="e.g. 5000">
+        @if (form.controls.baseAmount.invalid && form.controls.baseAmount.touched) {
+          @if (form.controls.baseAmount.errors?.['required']) {
+            <div class="form-error">Amount is required</div>
+          } @else if (form.controls.baseAmount.errors?.['min']) {
+            <div class="form-error">Amount must be greater than 0</div>
+          }
+        }
+      </div>
+      <div class="form-group">
+        <label for="dueDate">Due Date</label>
+        <input id="dueDate" type="date" class="form-control" formControlName="dueDate">
+        @if (form.controls.dueDate.invalid && form.controls.dueDate.touched) {
+          <div class="form-error">Due date is required</div>
+        }
+      </div>
+    </div>
+    <div class="mt-lg">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
+        {{ loading() ? 'Creating...' : 'Create Bill' }}
+      </button>
+    </div>
+  </form>
+</div></div>

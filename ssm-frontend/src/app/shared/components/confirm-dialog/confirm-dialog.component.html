@@ -1,0 +1,16 @@
+@if (open()) {
+  <div class="modal-backdrop" (click)="cancelled.emit()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirm Action</h3>
+      </div>
+      <div class="modal-body">
+        <p>{{ message() }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cancelled.emit()">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmed.emit()">Confirm</button>
+      </div>
+    </div>
+  </div>
+}

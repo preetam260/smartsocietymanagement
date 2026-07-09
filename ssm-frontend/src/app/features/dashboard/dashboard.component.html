@@ -1,0 +1,182 @@
+<div class="dashboard-page">
+  @if (loading()) {
+    <app-loading-spinner />
+  } @else {
+    <div class="dashboard-welcome">
+      <h1>Welcome back, {{ userName() }} 👋</h1>
+      <p class="welcome-sub">Here's what's happening in your society today.</p>
+    </div>
+
+    @switch (auth.role()) {
+
+      @case ('Admin') {
+        <div class="stats-grid">
+          <a routerLink="/users" class="stat-link">
+            <app-stat-card label="Total Users" [value]="stats().totalUsers" icon="👥" />
+          </a>
+          <a routerLink="/bills" class="stat-link">
+            <app-stat-card label="Pending Bills" [value]="stats().pendingBills" icon="💰" />
+          </a>
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card label="Open Complaints" [value]="stats().openComplaints" icon="📝" />
+          </a>
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card label="In Progress" [value]="stats().inProgressComplaints" icon="🔄" />
+          </a>
+          <a routerLink="/facilities" class="stat-link">
+            <app-stat-card label="Active Facilities" [value]="stats().activeFacilities" icon="🏋️" />
+          </a>
+          <a routerLink="/visitors" class="stat-link">
+            <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
+          </a>
+        </div>
+        <div class="quick-actions">
+          <h2>Quick Actions</h2>
+          <div class="action-grid">
+            <a routerLink="/users/new" class="action-card">
+              <span class="action-icon">➕</span>
+              <span>Add User</span>
+            </a>
+            <a routerLink="/apartments/new" class="action-card">
+              <span class="action-icon">🏢</span>
+              <span>Add Apartment</span>
+            </a>
+            <a routerLink="/bills/new" class="action-card">
+              <span class="action-icon">💳</span>
+              <span>Create Bill</span>
+            </a>
+            <a routerLink="/announcements/new" class="action-card">
+              <span class="action-icon">📢</span>
+              <span>Post Announcement</span>
+            </a>
+            <a routerLink="/complaints" class="action-card">
+              <span class="action-icon">📋</span>
+              <span>Manage Complaints</span>
+            </a>
+            <a routerLink="/residents/new" class="action-card">
+              <span class="action-icon">🏠</span>
+              <span>Add Resident</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      @case ('Owner') {
+        <div class="stats-grid">
+          <a routerLink="/apartments/my" class="stat-link">
+            <app-stat-card label="My Apartments" [value]="stats().myApartments" icon="🏢" />
+          </a>
+          <a routerLink="/bills/my" class="stat-link">
+            <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
+          </a>
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
+          </a>
+          <a routerLink="/bookings" class="stat-link">
+            <app-stat-card label="My Bookings" [value]="stats().myBookings" icon="📅" />
+          </a>
+          <a routerLink="/announcements" class="stat-link">
+            <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
+          </a>
+        </div>
+        <div class="quick-actions">
+          <h2>Quick Actions</h2>
+          <div class="action-grid">
+            <a routerLink="/apartments/my" class="action-card">
+              <span class="action-icon">🏢</span>
+              <span>My Apartments</span>
+            </a>
+            <a routerLink="/bookings/new" class="action-card">
+              <span class="action-icon">📅</span>
+              <span>Book Facility</span>
+            </a>
+            <a routerLink="/complaints/new" class="action-card">
+              <span class="action-icon">📝</span>
+              <span>File Complaint</span>
+            </a>
+            <a routerLink="/visitors/register" class="action-card">
+              <span class="action-icon">🚶</span>
+              <span>Register Visitor</span>
+            </a>
+            <a routerLink="/announcements" class="action-card">
+              <span class="action-icon">📢</span>
+              <span>Announcements</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      @case ('Resident') {
+        <div class="stats-grid">
+          <a routerLink="/bills/my" class="stat-link">
+            <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
+          </a>
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
+          </a>
+          <a routerLink="/bookings" class="stat-link">
+            <app-stat-card label="My Bookings" [value]="stats().myBookings" icon="📅" />
+          </a>
+          <a routerLink="/announcements" class="stat-link">
+            <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
+          </a>
+        </div>
+        <div class="quick-actions">
+          <h2>Quick Actions</h2>
+          <div class="action-grid">
+            <a routerLink="/bookings/new" class="action-card">
+              <span class="action-icon">📅</span>
+              <span>Book Facility</span>
+            </a>
+            <a routerLink="/complaints/new" class="action-card">
+              <span class="action-icon">📝</span>
+              <span>File Complaint</span>
+            </a>
+            <a routerLink="/visitors/register" class="action-card">
+              <span class="action-icon">🚶</span>
+              <span>Register Visitor</span>
+            </a>
+            <a routerLink="/visitors/my" class="action-card">
+              <span class="action-icon">📋</span>
+              <span>My Visitors</span>
+            </a>
+            <a routerLink="/bills/my" class="action-card">
+              <span class="action-icon">💳</span>
+              <span>Pay Bills</span>
+            </a>
+            <a routerLink="/announcements" class="action-card">
+              <span class="action-icon">📢</span>
+              <span>Announcements</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      @case ('SecurityStaff') {
+        <div class="stats-grid">
+          <a routerLink="/visitors/checkin" class="stat-link">
+            <app-stat-card label="Quick Check-In" value="→" icon="🚶" />
+          </a>
+          <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
+        </div>
+        <div class="quick-actions">
+          <h2>Quick Actions</h2>
+          <div class="action-grid">
+            <a routerLink="/visitors/checkin" class="action-card action-card--primary">
+              <span class="action-icon">✅</span>
+              <span>Check In Visitor</span>
+            </a>
+            <a routerLink="/visitors" class="action-card">
+              <span class="action-icon">📋</span>
+              <span>All Visitors</span>
+            </a>
+            <a routerLink="/announcements" class="action-card">
+              <span class="action-icon">📢</span>
+              <span>Announcements</span>
+            </a>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

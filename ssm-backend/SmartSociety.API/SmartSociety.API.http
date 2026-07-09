@@ -1,0 +1,6 @@
+@SmartSociety.API_HostAddress = http://localhost:5218
+
+GET {{SmartSociety.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,23 @@
+<div class="page-header">
+      <h1>Visitor Check-In</h1>
+      <a routerLink="/visitors" class="btn btn-outline">← Back</a>
+    </div>
+    <div class="card"><div class="card-body">
+      <p class="text-sm text-muted mb-lg">Upload a QR code image to check in a visitor.</p>
+      <div class="form-group">
+        <label for="qrFile">QR Code Image</label>
+        <input id="qrFile" type="file" accept="image/*" class="form-control" (change)="onFileSelect($event)">
+      </div>
+      <button class="btn btn-primary" [disabled]="!selectedFile() || loading()" (click)="checkIn()">
+        {{ loading() ? 'Processing...' : 'Check In' }}
+      </button>
+
+      @if (result()) {
+        <div class="mt-lg" style="background:var(--color-success-light);padding:var(--spacing-lg);border-radius:var(--radius)">
+          <h3 style="color:#065f46">✅ Checked In Successfully</h3>
+          <p class="text-sm">Visitor: {{ result()!.visitorName }}</p>
+          <p class="text-sm">Time: {{ result()!.checkinTime }}</p>
+          <p class="text-sm">Staff: {{ result()!.staffName }}</p>
+        </div>
+      }
+    </div></div>

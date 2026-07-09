@@ -1,0 +1,62 @@
+<div class="page-header">
+      <h1>{{ isEdit() ? 'Edit User' : 'Create User' }}</h1>
+      <a routerLink="/users" class="btn btn-outline">← Back</a>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input id="name" type="text" class="form-control" formControlName="name" placeholder="Full name">
+              @if (form.controls.name.invalid && form.controls.name.touched) {
+                <div class="form-error">Name is required</div>
+              }
+            </div>
+            @if (!isEdit()) {
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" class="form-control" formControlName="email" placeholder="user@example.com"
+                      (input)="onEmailInput($event)">
+                @if (form.controls.email.invalid && form.controls.email.touched) {
+                  <div class="form-error">Valid email is required</div>
+                }
+                @if (emailHint()) {
+                  <div class="form-hint text-warning">⚠ This email may already be in use (hint only — server will validate)</div>
+                }
+              </div>
+            }
+            <div class="form-group">
+              <label for="phoneNumber">Phone Number</label>
+              <input id="phoneNumber" type="text" class="form-control" formControlName="phoneNumber" placeholder="Phone number">
+              @if (form.controls.phoneNumber.invalid && form.controls.phoneNumber.touched) {
+                <div class="form-error">Phone number is required</div>
+              }
+            </div>
+            @if (!isEdit()) {
+              <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" class="form-control" formControlName="role">
+                  <option value="">Select role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Resident">Resident</option>
+                  <option value="Owner">Owner</option>
+                  <option value="SecurityStaff">Security Staff</option>
+                </select>
+                @if (form.controls.role.invalid && form.controls.role.touched) {
+                  <div class="form-error">Role is required</div>
+                }
+              </div>
+            }
+          </div>
+          @if (!isEdit()) {
+            <p class="form-hint mt-md">Note: No password is needed. The user will set their own password via the Forgot Password flow.</p>
+          }
+          <div class="mt-lg">
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
+              {{ loading() ? 'Saving...' : (isEdit() ? 'Update User' : 'Create User') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>

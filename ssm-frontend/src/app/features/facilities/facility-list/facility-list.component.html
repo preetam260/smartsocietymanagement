@@ -1,0 +1,46 @@
+<div class="page-header">
+      <h1>Facilities</h1>
+      @if (auth.role() === 'Admin') {
+        <a routerLink="/facilities/new" class="btn btn-primary">+ Add Facility</a>
+      }
+    </div>
+    @if (loading()) { <app-loading-spinner /> }
+    @else if (!facilities().length) { <app-empty-state message="No facilities available" /> }
+    @else {
+      @if (auth.role() === 'Admin') {
+        <div class="card"><div class="card-body" style="padding:0">
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Name</th><th>Rate/hr</th><th>Capacity</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (f of facilities(); track f.id) {
+                <tr>
+                  <td><strong>{{ f.name }}</strong><br><span class="text-xs text-muted">{{ f.description | slice:0:60 }}</span></td>
+                  <td>{{ f.hourlyRate | currency:'INR' }}</td>
+                  <td>{{ f.capacity }}</td>
+                  <td><span [class]="f.isActive ? 'text-success' : 'text-danger'">{{ f.isActive ? 'Active' : 'Inactive' }}</span></td>
+                  <td class="actions">
+                    <a [routerLink]="['/facilities', f.id, 'edit']" class="btn btn-outline btn-sm">Edit</a>
+                    <a [routerLink]="['/bookings/facility', f.id]" class="btn btn-outline btn-sm">Bookings</a>
+                    <button class="btn btn-danger btn-sm" (click)="toDelete.set(f); showDelete.set(true)">Delete</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table></div>
+        </div></div>
+      } @else {
+        <div class="card-grid">
+          @for (f of facilities(); track f.id) {
+            <div class="card"><div class="card-body">
+              <h3>{{ f.name }}</h3>
+              <p class="text-sm text-muted mb-md">{{ f.description }}</p>
+              <div class="flex justify-between items-center">
+                <span class="text-sm">{{ f.hourlyRate | currency:'INR' }}/hr · {{ f.capacity }} people</span>
+                <a routerLink="/bookings/book" class="btn btn-primary btn-sm">Book</a>
+              </div>
+            </div></div>
+          }
+        </div>
+      }
+    }
+    <app-confirm-dialog [open]="showDelete()" message="Delete this facility?" (confirmed)="onDelete()" (cancelled)="showDelete.set(false)" />

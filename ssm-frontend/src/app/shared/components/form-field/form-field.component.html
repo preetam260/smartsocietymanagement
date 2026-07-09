@@ -1,0 +1,11 @@
+<div class="form-group">
+      <label [attr.for]="fieldId()">{{ label() }}</label>
+      <ng-content></ng-content>
+      @if (control() && control()!.invalid && control()!.touched) {
+        @for (entry of errorEntries(); track entry[0]) {
+          @if (control()!.hasError(entry[0])) {
+            <div class="form-error">{{ entry[1] }}</div>
+          }
+        }
+      }
+</div>

@@ -1,0 +1,30 @@
+<div class="page-header">
+      <h1>My Bookings</h1>
+      <a routerLink="/bookings/book" class="btn btn-primary">+ Book Facility</a>
+    </div>
+    @if (loading()) { <app-loading-spinner /> }
+    @else if (!bookings().length) { <app-empty-state message="No bookings yet" /> }
+    @else {
+      <div class="card"><div class="card-body" style="padding:0">
+        <div class="table-wrapper"><table>
+          <thead><tr><th>Facility</th><th>Date</th><th>Time</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            @for (b of bookings(); track b.id) {
+              <tr>
+                <td>{{ b.facilityName }}</td>
+                <td>{{ b.date | date:'mediumDate' }}</td>
+                <td>{{ b.startTime }} - {{ b.endTime }}</td>
+                <td>{{ b.totalCost | currency:'INR' }}</td>
+                <td><app-status-badge [status]="b.status" /></td>
+                <td class="actions">
+                  @if (b.status === 'Held' || b.status === 'Pending') {
+                    <button class="btn btn-success btn-sm" [disabled]="paying()" (click)="payBooking(b)">Pay</button>
+                    <button class="btn btn-danger btn-sm" (click)="cancelBooking(b)">Cancel</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table></div>
+      </div></div>
+    }

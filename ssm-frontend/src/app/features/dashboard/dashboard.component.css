@@ -1,0 +1,55 @@
+.dashboard-page { display: flex; flex-direction: column; gap: var(--spacing-xl); }
+
+.dashboard-welcome h1 { margin: 0; font-size: 1.75rem; font-weight: 700; }
+.welcome-sub { margin: var(--spacing-xs) 0 0; color: var(--color-text-muted); font-size: 0.95rem; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.stat-link { text-decoration: none; color: inherit; display: block; }
+.stat-link:hover { text-decoration: none; transform: translateY(-2px); transition: transform 0.15s ease; }
+
+.quick-actions h2 { margin: 0 0 var(--spacing-md); font-size: 1.1rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+
+.action-card:hover {
+  background: var(--color-primary-10, rgba(99,102,241,0.08));
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.action-card--primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+.action-card--primary:hover { opacity: 0.9; }
+
+.action-icon { font-size: 1.5rem; }

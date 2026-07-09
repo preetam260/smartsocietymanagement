@@ -1,0 +1,55 @@
+<div class="page-header">
+  <h1>{{ isEdit() ? 'Edit Resident' : 'Add Resident' }}</h1>
+  <a routerLink="/residents" class="btn btn-outline">← Back</a>
+</div>
+<div class="card"><div class="card-body">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    @if (!isEdit()) {
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="userId">User</label>
+          <select id="userId" class="form-control" formControlName="userId">
+            <option value="">Select user</option>
+            @for (u of users(); track u.id) {
+              <option [value]="u.id">{{ u.name }} ({{ u.email }})</option>
+            }
+          </select>
+          @if (form.controls.userId.invalid && form.controls.userId.touched) {
+            <div class="form-error">Please select a user</div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="apartmentId">Apartment</label>
+          <select id="apartmentId" class="form-control" formControlName="apartmentId">
+            <option value="">Select apartment</option>
+            @for (a of apartments(); track a.id) {
+              <option [value]="a.id">{{ a.block }}-{{ a.number }} (Floor {{ a.floor }})</option>
+            }
+          </select>
+          @if (apartments().length >= 100) {
+            <div class="form-hint">Showing first 100 apartments. Use the search if yours is missing.</div>
+          }
+          @if (form.controls.apartmentId.invalid && form.controls.apartmentId.touched) {
+            <div class="form-error">Please select an apartment</div>
+          }
+        </div>
+        <div class="form-group">
+          <label for="moveInDate">Move In Date</label>
+          <input id="moveInDate" type="date" class="form-control" formControlName="moveInDate">
+          @if (form.controls.moveInDate.invalid && form.controls.moveInDate.touched) {
+            <div class="form-error">Move-in date is required</div>
+          }
+        </div>
+      </div>
+    }
+    <div class="form-group" style="max-width:400px">
+      <label for="vehicleNumber">Vehicle Number (optional)</label>
+      <input id="vehicleNumber" class="form-control" formControlName="vehicleNumber" placeholder="e.g. KA-01-AB-1234">
+    </div>
+    <div class="mt-lg">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
+        {{ loading() ? 'Saving...' : (isEdit() ? 'Update' : 'Create') }}
+      </button>
+    </div>
+  </form>
+</div></div>

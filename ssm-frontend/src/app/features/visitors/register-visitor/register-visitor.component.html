@@ -1,0 +1,57 @@
+<div class="page-header">
+  <h1>Register Visitor</h1>
+  <a routerLink="/visitors/my" class="btn btn-outline">← My Visitors</a>
+</div>
+<div class="card"><div class="card-body">
+  <!-- Using template-driven form as deliberate demonstration per spec Section 14 -->
+  <form #visitorForm="ngForm" (ngSubmit)="onSubmit(visitorForm.valid)">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="visitorName">Visitor Name</label>
+        <input id="visitorName" class="form-control" [(ngModel)]="visitor.name" name="name" required #nameInput="ngModel">
+        @if (nameInput.invalid && nameInput.touched) {
+          <div class="form-error">Name is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="visitorEmail">Visitor Email</label>
+        <input id="visitorEmail" type="email" class="form-control" [(ngModel)]="visitor.email" name="email" required email #emailInput="ngModel">
+        @if (emailInput.invalid && emailInput.touched) {
+          @if (emailInput.errors?.['required']) {
+            <div class="form-error">Email is required</div>
+          } @else if (emailInput.errors?.['email']) {
+            <div class="form-error">Please enter a valid email address</div>
+          }
+        }
+      </div>
+      <div class="form-group">
+        <label for="purpose">Purpose</label>
+        <input id="purpose" class="form-control" [(ngModel)]="visitor.purpose" name="purpose" required #purposeInput="ngModel" placeholder="e.g. Delivery, Family visit">
+        @if (purposeInput.invalid && purposeInput.touched) {
+          <div class="form-error">Purpose is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="eta">Expected Arrival (ETA)</label>
+        <input id="eta" type="datetime-local" class="form-control" [(ngModel)]="visitor.eta" name="eta" required #etaInput="ngModel">
+        @if (etaInput.invalid && etaInput.touched) {
+          <div class="form-error">Expected arrival time is required</div>
+        }
+      </div>
+    </div>
+    <div class="mt-lg">
+      <button type="submit" class="btn btn-primary" [disabled]="loading() || visitorForm.invalid">
+        {{ loading() ? 'Registering...' : 'Register Visitor' }}
+      </button>
+    </div>
+  </form>
+
+  @if (registeredVisitor()) {
+    <div class="qr-result mt-lg">
+      <h3>✅ Visitor Registered Successfully</h3>
+      <p class="text-sm text-muted">Share this QR token with your visitor:</p>
+      <div class="qr-token">{{ registeredVisitor()!.qrToken }}</div>
+      <p class="text-xs text-muted">Expires: {{ registeredVisitor()!.expiresAt }}</p>
+    </div>
+  }
+</div></div>
