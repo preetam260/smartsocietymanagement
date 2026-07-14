@@ -4,8 +4,8 @@ namespace SmartSociety.Domain.Models;
 
 public class Resident : BaseEntity
 {
-    public Guid UserId {get; set;} // FK
-    public Guid ApartmentId {get; set;} // FK
+    public Guid UserId {get; set;}
+    public Guid ApartmentId {get; set;} 
     public DateTime MoveInDate {get; set;}
     public DateTime? MoveOutDate {get; set;}
     public string? VehicleNumber {get; set;}

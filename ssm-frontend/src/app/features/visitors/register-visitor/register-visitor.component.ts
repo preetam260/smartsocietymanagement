@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VisitorService } from '../visitor.service';
@@ -12,13 +12,23 @@ import { ToastService } from '../../../core/services/toast.service';
   templateUrl: './register-visitor.component.html',
   styleUrls: ['./register-visitor.component.css']
 })
-export class RegisterVisitorComponent {
+export class RegisterVisitorComponent implements OnInit {
   private svc = inject(VisitorService);
   private toast = inject(ToastService);
+  private router = inject(Router);
   loading = signal(false);
   registeredVisitor = signal<VisitorResponse | null>(null);
 
   visitor = { name: '', email: '', purpose: '', eta: '' };
+
+  ngOnInit() {
+    this.svc.getMyVisitors().subscribe({
+      error: () => {
+        this.toast.error('You do not have an active residency to register visitors.');
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
 
   onSubmit(valid: boolean | null | undefined) {
     if (!valid) return;

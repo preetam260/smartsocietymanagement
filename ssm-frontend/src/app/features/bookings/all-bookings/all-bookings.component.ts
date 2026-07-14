@@ -1,43 +1,42 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { VisitorService } from '../visitor.service';
-import { VisitorResponse } from '../visitor.model';
-import { AuthService } from '../../../core/services/auth.service';
+import { BookingService } from '../booking.service';
+import { BookingResponse } from '../booking.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { ToastService } from '../../../core/services/toast.service';
-import { DatePipe } from '@angular/common';
-import { VisitorStatus } from '../../../core/models/enums';
+import { DatePipe, CurrencyPipe } from '@angular/common';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PagedResult } from '../../../core/models/paged-result.model';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 @Component({
-  selector: 'app-visitor-list',
+  selector: 'app-all-bookings',
   standalone: true,
-  imports: [RouterLink, StatusBadgeComponent, LoadingSpinnerComponent, EmptyStateComponent, DatePipe],
-  templateUrl: './visitor-list.component.html'
+  imports: [RouterLink, StatusBadgeComponent, LoadingSpinnerComponent, EmptyStateComponent, DatePipe, CurrencyPipe, ConfirmDialogComponent],
+  templateUrl: './all-bookings.component.html'
 })
-export class VisitorListComponent implements OnInit {
-  private svc = inject(VisitorService);
+export class AllBookingsComponent implements OnInit {
+  private svc = inject(BookingService);
   private toast = inject(ToastService);
-  auth = inject(AuthService);
   loading = signal(true);
-  allVisitors = signal<VisitorResponse[]>([]);
+  allBookings = signal<BookingResponse[]>([]);
   searchTerm = signal('');
   selectedStatus = signal('');
   currentPage = signal(1);
+  showExpireHolds = signal(false);
 
   filtered = computed(() => {
-    let list = this.allVisitors();
+    let list = this.allBookings();
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
-    if (term) list = list.filter(v =>
-      v.name.toLowerCase().includes(term) ||
-      v.email.toLowerCase().includes(term) ||
-      v.purpose.toLowerCase().includes(term)
+    if (term) list = list.filter(b =>
+      b.userName.toLowerCase().includes(term) ||
+      b.facilityName.toLowerCase().includes(term)
     );
-    if (status) list = list.filter(v => v.status === status);
+    if (status) list = list.filter(b => b.status === status);
     return list;
   });
 
@@ -55,39 +54,29 @@ export class VisitorListComponent implements OnInit {
     this.currentPage.set(1);
   }
 
-  onFilter(e: Event) {
+  onStatusFilter(e: Event) {
     this.selectedStatus.set((e.target as HTMLSelectElement).value);
     this.currentPage.set(1);
   }
 
   load() {
     this.loading.set(true);
-    const role = this.auth.role();
-    let obs$;
-    if (role === 'Admin') {
-      obs$ = this.svc.getAll();
-    } else if (role === 'SecurityStaff') {
-      obs$ = this.svc.getAll();
-    } else {
-      obs$ = this.svc.getMyVisitors();
-    }
-
-    obs$.subscribe({
-      next: v => { this.allVisitors.set(v); this.loading.set(false); },
-      error: () => { this.loading.set(false); }
+    this.svc.getAll({ pageNumber: 1, pageSize: 999 }).subscribe({
+      next: r => { this.allBookings.set((r as PagedResult<BookingResponse>).items); this.loading.set(false); },
+      error: () => this.loading.set(false)
     });
   }
 
-  deny(v: VisitorResponse) {
-    this.svc.deny(v.id).subscribe({
-      next: () => { this.toast.success('Visitor denied'); this.load(); },
+  markComplete(b: BookingResponse) {
+    this.svc.complete(b.id).subscribe({
+      next: () => { this.toast.success('Booking marked complete'); this.load(); },
       error: () => {}
     });
   }
 
-  checkout(v: VisitorResponse) {
-    this.svc.checkOut(v.id).subscribe({
-      next: () => { this.toast.success('Visitor checked out'); this.load(); },
+  expireHolds() {
+    this.svc.expireHolds().subscribe({
+      next: () => { this.toast.success('Expired holds processed'); this.showExpireHolds.set(false); this.load(); },
       error: () => {}
     });
   }

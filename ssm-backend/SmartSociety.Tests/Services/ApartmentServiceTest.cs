@@ -26,7 +26,6 @@ public class ApartmentServiceTest
         _mockUow.Setup(uow => uow.Apartments).Returns(_mockRepo.Object);
         _mockUow.Setup(uow => uow.Users).Returns(_mockUserRepo.Object);
 
-        // Default mock setup for Users
         _mockUserRepo.Setup(u => u.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid id) => new User 
             { 

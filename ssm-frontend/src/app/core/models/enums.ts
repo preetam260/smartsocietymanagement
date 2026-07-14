@@ -1,4 +1,4 @@
-export type UserRole = 'Admin' | 'Resident' | 'SecurityStaff' | 'Owner';
+export type UserRole = 'All' | 'Admin' | 'Resident' | 'SecurityStaff' | 'Owner';
 
 export type BillingStatus = 'Unpaid' | 'Paid' | 'Overdue' | 'Disputed' | 'Processing';
 

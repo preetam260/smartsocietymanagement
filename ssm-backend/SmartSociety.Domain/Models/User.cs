@@ -2,7 +2,6 @@ using SmartSociety.Domain.Enums;
 
 namespace SmartSociety.Domain.Models;
 
-// Master Entity : Who can login to the system
 public class User : BaseEntity
 {
     public string Name {get; set;} = "";

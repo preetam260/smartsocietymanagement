@@ -1,0 +1,66 @@
+<div class="page-header">
+  <h1>All Bookings</h1>
+  <div class="flex gap-sm">
+    <button class="btn btn-warning" (click)="showExpireHolds.set(true)">Expire Holds</button>
+    <a routerLink="/facilities" class="btn btn-outline">← Facilities</a>
+  </div>
+</div>
+
+<div class="card"><div class="card-body" style="padding:0">
+  <div class="card-header" style="padding:var(--spacing-md)">
+    <div class="flex gap-sm" style="flex-wrap:wrap">
+      <input class="form-control" style="max-width:260px" placeholder="Search resident or facility…" (input)="onSearch($event)" />
+      <select class="form-control" style="max-width:180px" (change)="onStatusFilter($event)">
+        <option value="">All Statuses</option>
+        <option value="Held">Held</option>
+        <option value="Confirmed">Confirmed</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="Expired">Expired</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) { <app-loading-spinner /> }
+  @else if (!filtered().length) { <app-empty-state message="No bookings found" /> }
+  @else {
+    <div class="table-wrapper"><table>
+      <thead><tr>
+        <th>Resident</th><th>Facility</th><th>Date</th><th>Time</th><th>Cost</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        @for (b of paginated(); track b.id) {
+          <tr>
+            <td>{{ b.userName }}</td>
+            <td>{{ b.facilityName }}</td>
+            <td>{{ b.date | date:'mediumDate' }}</td>
+            <td>{{ b.startTime | date:'shortTime' }} – {{ b.endTime | date:'shortTime' }}</td>
+            <td>{{ b.totalCost | currency:'INR' }}</td>
+            <td><app-status-badge [status]="b.status" /></td>
+            <td class="actions">
+              @if (b.status === 'Confirmed') {
+                <button class="btn btn-success btn-sm" (click)="markComplete(b)">Complete</button>
+              }
+              <a [routerLink]="['/facilities', b.facilityId, 'bookings']" class="btn btn-outline btn-sm">Facility</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table></div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="prevPage()">‹ Prev</button>
+        <span class="text-sm text-muted">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next ›</button>
+      </div>
+    }
+  }
+</div></div>
+
+<app-confirm-dialog
+  [open]="showExpireHolds()"
+  message="Expire all held bookings that have passed their hold time? This cannot be undone."
+  (confirmed)="expireHolds()"
+  (cancelled)="showExpireHolds.set(false)"
+/>

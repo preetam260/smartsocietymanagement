@@ -62,6 +62,7 @@ export class BookFacilityComponent implements OnInit {
 
     this.bookingService.create({
       facilityId: this.form.value.facilityId!,
+      date: date,          // ← send the date field so backend stores it correctly
       startTime: startISO,
       endTime: endISO,
     }).subscribe({

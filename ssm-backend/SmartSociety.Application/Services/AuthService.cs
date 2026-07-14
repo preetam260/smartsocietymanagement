@@ -41,15 +41,19 @@ public class AuthService : IAuthService
 
         var token = GenerateToken(user);
 
+        var activeResidency = await _uow.Residents.GetCurrentByUserIdAsync(user.Id);
+
         return new LoginResponseDto
         {
             Token = token,
             Name = user.Name,
             Email = user.Email,
             Role = user.Role,
+            HasActiveResidency = activeResidency != null,
         };
 
     }
+
 
     public async Task ForgotPasswordAsync(string email)
     {

@@ -14,7 +14,12 @@ public class EmailService : IEmailService
         _config = config;
     }
 
-    public async Task SendAsync(string to, string subject, string body, byte[]? attachmentBytes = null, string? attachmentName = null)
+    public async Task SendAsync(
+        string to,
+        string subject,
+        string body,
+        byte[]? attachmentBytes = null,
+        string? attachmentName = null)
     {
         var settings = _config.GetSection("EmailSettings");
 
@@ -23,13 +28,16 @@ public class EmailService : IEmailService
         message.To.Add(MailboxAddress.Parse(to));
         message.Subject = subject;
 
-        var builder = new BodyBuilder();
-        builder.HtmlBody = body;
+        var builder = new BodyBuilder { HtmlBody = body };
 
         if (attachmentBytes != null && attachmentBytes.Length > 0 && !string.IsNullOrEmpty(attachmentName))
         {
-            var image = builder.LinkedResources.Add(attachmentName, attachmentBytes);
-            image.ContentId = "qrcode";
+            // Determine MIME type
+            var contentType = attachmentName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)
+                ? "application/pdf"
+                : "application/octet-stream";
+
+            builder.Attachments.Add(attachmentName, attachmentBytes, ContentType.Parse(contentType));
         }
 
         message.Body = builder.ToMessageBody();

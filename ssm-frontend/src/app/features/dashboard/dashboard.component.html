@@ -7,28 +7,69 @@
       <p class="welcome-sub">Here's what's happening in your society today.</p>
     </div>
 
-    @switch (auth.role()) {
+    @switch (auth.effectiveRole()) {
 
       @case ('Admin') {
         <div class="stats-grid">
-          <a routerLink="/users" class="stat-link">
-            <app-stat-card label="Total Users" [value]="stats().totalUsers" icon="👥" />
-          </a>
-          <a routerLink="/bills" class="stat-link">
-            <app-stat-card label="Pending Bills" [value]="stats().pendingBills" icon="💰" />
-          </a>
-          <a routerLink="/complaints" class="stat-link">
-            <app-stat-card label="Open Complaints" [value]="stats().openComplaints" icon="📝" />
-          </a>
-          <a routerLink="/complaints" class="stat-link">
-            <app-stat-card label="In Progress" [value]="stats().inProgressComplaints" icon="🔄" />
-          </a>
-          <a routerLink="/facilities" class="stat-link">
-            <app-stat-card label="Active Facilities" [value]="stats().activeFacilities" icon="🏋️" />
-          </a>
-          <a routerLink="/visitors" class="stat-link">
-            <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
-          </a>
+          @if (stats().totalUsers > 0) {
+            <a routerLink="/users" class="stat-link">
+              <app-stat-card label="Total Users" [value]="stats().totalUsers" icon="👥" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Total Users" [value]="0" icon="👥" />
+            </div>
+          }
+
+          @if (stats().openComplaints > 0) {
+            <a routerLink="/complaints" class="stat-link">
+              <app-stat-card label="Open Complaints" [value]="stats().openComplaints" icon="📝" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Open Complaints" [value]="0" icon="📝" />
+            </div>
+          }
+
+          @if (stats().inProgressComplaints > 0) {
+            <a routerLink="/complaints" class="stat-link">
+              <app-stat-card label="In Progress" [value]="stats().inProgressComplaints" icon="🔄" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="In Progress" [value]="0" icon="🔄" />
+            </div>
+          }
+
+          @if (stats().activeFacilities > 0) {
+            <a routerLink="/facilities" class="stat-link">
+              <app-stat-card label="Active Facilities" [value]="stats().activeFacilities" icon="🏋️" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Active Facilities" [value]="0" icon="🏋️" />
+            </div>
+          }
+
+          @if (stats().pendingVisitors > 0) {
+            <a routerLink="/visitors" class="stat-link">
+              <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Pending Visitors" [value]="0" icon="⏳" />
+            </div>
+          }
+
+          @if (stats().totalAnnouncements > 0) {
+            <a routerLink="/announcements" class="stat-link announcement-content">
+              <app-stat-card label="Announcements" [value]="stats().totalAnnouncements" icon="📢" />
+            </a>
+          } @else {
+            <div class="stat-link announcement-content">
+              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+            </div>
+          }
         </div>
         <div class="quick-actions">
           <h2>Quick Actions</h2>
@@ -57,27 +98,60 @@
               <span class="action-icon">🏠</span>
               <span>Add Resident</span>
             </a>
+            <a routerLink="/visitors" class="action-card">
+              <span class="action-icon">🚶</span>
+              <span>All Visitors</span>
+            </a>
+            <a routerLink="/admin/bookings" class="action-card">
+              <span class="action-icon">📅</span>
+              <span>All Bookings</span>
+            </a>
           </div>
         </div>
       }
 
       @case ('Owner') {
+        <!-- Pure owner: read-only, no booking, no visitors -->
         <div class="stats-grid">
-          <a routerLink="/apartments/my" class="stat-link">
-            <app-stat-card label="My Apartments" [value]="stats().myApartments" icon="🏢" />
-          </a>
-          <a routerLink="/bills/my" class="stat-link">
-            <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
-          </a>
-          <a routerLink="/complaints" class="stat-link">
-            <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
-          </a>
-          <a routerLink="/bookings" class="stat-link">
-            <app-stat-card label="My Bookings" [value]="stats().myBookings" icon="📅" />
-          </a>
-          <a routerLink="/announcements" class="stat-link">
-            <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
-          </a>
+          @if (stats().myApartments > 0) {
+            <a routerLink="/apartments/my" class="stat-link">
+              <app-stat-card label="My Apartments" [value]="stats().myApartments" icon="🏢" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="My Apartments" [value]="0" icon="🏢" />
+            </div>
+          }
+
+          @if (stats().myUnpaidBills > 0) {
+            <a routerLink="/bills/my" class="stat-link">
+              <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Unpaid Bills" [value]="0" icon="💰" />
+            </div>
+          }
+
+          @if (stats().myOpenComplaints > 0) {
+            <a routerLink="/complaints" class="stat-link">
+              <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Active Complaints" [value]="0" icon="📝" />
+            </div>
+          }
+
+          @if (stats().myAnnouncements > 0) {
+            <a routerLink="/announcements" class="stat-link">
+              <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+            </div>
+          }
         </div>
         <div class="quick-actions">
           <h2>Quick Actions</h2>
@@ -86,17 +160,13 @@
               <span class="action-icon">🏢</span>
               <span>My Apartments</span>
             </a>
-            <a routerLink="/bookings/new" class="action-card">
-              <span class="action-icon">📅</span>
-              <span>Book Facility</span>
-            </a>
             <a routerLink="/complaints/new" class="action-card">
               <span class="action-icon">📝</span>
               <span>File Complaint</span>
             </a>
-            <a routerLink="/visitors/register" class="action-card">
-              <span class="action-icon">🚶</span>
-              <span>Register Visitor</span>
+            <a routerLink="/facilities" class="action-card">
+              <span class="action-icon">🏋️</span>
+              <span>View Facilities</span>
             </a>
             <a routerLink="/announcements" class="action-card">
               <span class="action-icon">📢</span>
@@ -107,24 +177,42 @@
       }
 
       @case ('Resident') {
+        <!-- Resident or Owner-with-active-residency -->
         <div class="stats-grid">
-          <a routerLink="/bills/my" class="stat-link">
-            <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
-          </a>
-          <a routerLink="/complaints" class="stat-link">
-            <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
-          </a>
-          <a routerLink="/bookings" class="stat-link">
-            <app-stat-card label="My Bookings" [value]="stats().myBookings" icon="📅" />
-          </a>
-          <a routerLink="/announcements" class="stat-link">
-            <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
-          </a>
+          @if (stats().myUnpaidBills > 0) {
+            <a routerLink="/bills/my" class="stat-link">
+              <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Unpaid Bills" [value]="0" icon="💰" />
+            </div>
+          }
+
+          @if (stats().myOpenComplaints > 0) {
+            <a routerLink="/complaints" class="stat-link">
+              <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Active Complaints" [value]="0" icon="📝" />
+            </div>
+          }
+
+          @if (stats().myAnnouncements > 0) {
+            <a routerLink="/announcements" class="stat-link">
+              <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
+            </a>
+          } @else {
+            <div class="stat-link">
+              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+            </div>
+          }
         </div>
         <div class="quick-actions">
           <h2>Quick Actions</h2>
           <div class="action-grid">
-            <a routerLink="/bookings/new" class="action-card">
+            <a routerLink="/bookings/book" class="action-card">
               <span class="action-icon">📅</span>
               <span>Book Facility</span>
             </a>
@@ -157,7 +245,9 @@
           <a routerLink="/visitors/checkin" class="stat-link">
             <app-stat-card label="Quick Check-In" value="→" icon="🚶" />
           </a>
-          <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
+          <div class="stat-link">
+            <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
+          </div>
         </div>
         <div class="quick-actions">
           <h2>Quick Actions</h2>

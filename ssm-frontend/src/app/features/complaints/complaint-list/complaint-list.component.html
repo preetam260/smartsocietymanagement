@@ -5,8 +5,21 @@
   }
 </div>
 <div class="card"><div class="card-body" style="padding:0">
+  <div class="card-header" style="padding:var(--spacing-md)">
+    <div class="flex gap-sm" style="flex-wrap:wrap">
+      <input class="form-control" style="max-width:260px" placeholder="Search title or resident…" (input)="onSearch($event)" />
+      <select class="form-control" style="max-width:180px" (change)="onStatusFilter($event)">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Closed">Closed</option>
+      </select>
+    </div>
+  </div>
   @if (loading()) { <app-loading-spinner /> }
-  @else if (!complaints().length) { <app-empty-state message="No complaints found" /> }
+  @else if (!filtered().length) { <app-empty-state message="No complaints found" /> }
   @else {
     <div class="table-wrapper"><table>
       <thead><tr>
@@ -14,7 +27,7 @@
         @if (auth.role() === 'Admin') { <th>Actions</th> }
       </tr></thead>
       <tbody>
-        @for (c of complaints(); track c.id) {
+        @for (c of paginated(); track c.id) {
           <tr>
             <td>
               <strong>{{ c.title }}</strong><br>
@@ -40,6 +53,13 @@
         }
       </tbody>
     </table></div>
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="prevPage()">‹ Prev</button>
+        <span class="text-sm text-muted">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next ›</button>
+      </div>
+    }
   }
 </div></div>
 

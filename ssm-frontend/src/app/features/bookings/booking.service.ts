@@ -13,6 +13,13 @@ export class BookingService {
     return this.http.post<BookingResponse>(this.base, dto);
   }
 
+  getAll(query?: PaginationQuery) {
+    let params = new HttpParams()
+      .set('pageNumber', query?.pageNumber ?? 1)
+      .set('pageSize', query?.pageSize ?? 20);
+    return this.http.get<PagedResult<BookingResponse>>(this.base, { params });
+  }
+
   getMyBookings() {
     return this.http.get<BookingResponse[]>(`${this.base}/my`);
   }
@@ -44,7 +51,6 @@ export class BookingService {
     return this.http.post<void>(`${this.base}/expire-holds`, {});
   }
 
-  // Booking payment methods — Admin/Resident/Owner, kept in booking.service per fix #2
   createPaymentOrder(bookingId: string) {
     return this.http.post<CreatePaymentOrderResponse>(`${this.base}/${bookingId}/create-order`, {});
   }

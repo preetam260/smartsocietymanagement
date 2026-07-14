@@ -20,8 +20,12 @@ export class AnnouncementFeedComponent implements OnInit {
   pinned = signal<AnnouncementResponse[]>([]);
   announcements = signal<AnnouncementResponse[]>([]);
 
+
   ngOnInit() {
-    this.svc.getPinned().subscribe(p => this.pinned.set(p));
-    this.svc.getMine().subscribe(a => { this.announcements.set(a.filter(x => !x.isPinned)); this.loading.set(false); });
+    this.svc.getMine().subscribe(a => {
+      this.pinned.set(a.filter(x => x.isPinned));
+      this.announcements.set(a.filter(x => !x.isPinned));
+      this.loading.set(false);
+    });
   }
 }

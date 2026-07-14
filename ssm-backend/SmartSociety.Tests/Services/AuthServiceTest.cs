@@ -30,7 +30,6 @@ public class AuthServiceTest
 
         _mockUow.Setup(u => u.Users).Returns(_mockUserRepo.Object);
 
-        // Mock Configuration
         var mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s["Key"]).Returns("SuperSecretTestKey_AtLeast32CharsLong!!");
         mockSection.Setup(s => s["Issuer"]).Returns("SmartSociety");

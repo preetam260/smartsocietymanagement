@@ -29,6 +29,7 @@ export class FacilityListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
+    // Admin sees all facilities; everyone else (Resident, Owner) sees only active ones
     const obs = this.auth.role() === 'Admin' ? this.svc.getAll() : this.svc.getActive();
     obs.subscribe(f => { this.facilities.set(f); this.loading.set(false); });
   }

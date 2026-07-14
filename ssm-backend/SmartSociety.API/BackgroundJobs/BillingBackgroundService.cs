@@ -42,6 +42,7 @@ public class BillingBackgroundService : BackgroundService
                 using var scope = _serviceProvider.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<SmartSocietyDbContext>();
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
                 var today = DateTime.UtcNow;
 
@@ -50,6 +51,7 @@ public class BillingBackgroundService : BackgroundService
                     await GenerateMonthlyBillsAsync(context, notificationService, today);
                 }
                 await MarkOverdueBillsAsync(context, notificationService, today);
+                await bookingService.ExpireHoldsAsync();
             }
             catch (Exception ex)
             {
@@ -75,7 +77,6 @@ public class BillingBackgroundService : BackgroundService
 
         foreach (var apartment in apartments)
         {
-            // Skip if bill for this period already exists
             var existingBill = await context.Bills
                 .FirstOrDefaultAsync(b => b.ApartmentId == apartment.Id && b.Period == period);
             if (existingBill != null)

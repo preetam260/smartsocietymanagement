@@ -8,6 +8,9 @@
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--color-border-light);
       transition: var(--transition);
+      min-height: 96px;
+      height: 100%;
+      box-sizing: border-box;
     }
     .stat-card:hover {
       box-shadow: var(--shadow-md);
@@ -23,6 +26,11 @@
       border-radius: var(--radius);
       flex-shrink: 0;
     }
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
     .stat-value {
       font-size: var(--font-size-2xl);
       font-weight: 700;
@@ -32,4 +40,6 @@
     .stat-label {
       font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
+      line-height: 1.3;
     }
+

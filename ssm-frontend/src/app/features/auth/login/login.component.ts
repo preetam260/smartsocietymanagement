@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -37,11 +38,17 @@ export class LoginComponent {
         this.toast.success('Welcome back!');
         this.router.navigate(['/dashboard']);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         const msg: string = err.error?.message ?? '';
-        if (msg.toLowerCase().includes('password') && (msg.toLowerCase().includes('not set') || msg.toLowerCase().includes('forgot'))) {
+
+        if (msg.toLowerCase().includes('password') &&
+          (msg.toLowerCase().includes('not set') || msg.toLowerCase().includes('forgot'))) {
           this.showPasswordNotSet.set(true);
+        } else if (msg.toLowerCase().includes('inactive') || msg.toLowerCase().includes('deactivated') || err.status === 403) {
+          this.toast.error('Your account is inactive or has been deactivated. Contact your administrator.');
+        } else {
+          this.toast.error('Incorrect email or password.');
         }
       }
     });

@@ -5,10 +5,10 @@ import { UserService } from '../users/user.service';
 import { BillService } from '../bills/bill.service';
 import { ComplaintService } from '../complaints/complaint.service';
 import { FacilityService } from '../facilities/facility.service';
-import { BookingService } from '../bookings/booking.service';
 import { AnnouncementService } from '../announcements/announcement.service';
 import { VisitorService } from '../visitors/visitor.service';
 import { ApartmentService } from '../apartments/apartment.service';
+import { ResidentService } from '../residents/resident.service';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { forkJoin, catchError, of } from 'rxjs';
@@ -26,10 +26,10 @@ export class DashboardComponent implements OnInit {
   private billService = inject(BillService);
   private complaintService = inject(ComplaintService);
   private facilityService = inject(FacilityService);
-  private bookingService = inject(BookingService);
   private announcementService = inject(AnnouncementService);
   private visitorService = inject(VisitorService);
   private apartmentService = inject(ApartmentService);
+  private residentService = inject(ResidentService);
 
   loading = signal(true);
   stats = signal<any>({});
@@ -37,23 +37,23 @@ export class DashboardComponent implements OnInit {
   userName = computed(() => this.auth.currentUser()?.name ?? 'User');
 
   ngOnInit() {
-    const role = this.auth.role();
+    const role = this.auth.effectiveRole();
     switch (role) {
       case 'Admin':
         forkJoin({
           users: this.userService.getAllPaged({ pageNumber: 1, pageSize: 1 }).pipe(catchError(() => of({ totalCount: 0, items: [] }))),
-          bills: this.billService.getPending().pipe(catchError(() => of([]))),
           complaints: this.complaintService.getAll().pipe(catchError(() => of([]))),
           facilities: this.facilityService.getActive().pipe(catchError(() => of([]))),
           visitors: this.visitorService.getByStatus('Pending').pipe(catchError(() => of([]))),
-        }).subscribe(({ users, bills, complaints, facilities, visitors }) => {
+          announcements: this.announcementService.getAllPaged({ pageNumber: 1, pageSize: 1 }).pipe(catchError(() => of({ totalCount: 0, items: [] }))),
+        }).subscribe(({ users, complaints, facilities, visitors, announcements }) => {
           this.stats.set({
             totalUsers: (users as any).totalCount,
-            pendingBills: bills.length,
             openComplaints: (complaints as any[]).filter(c => c.status === 'Open').length,
             inProgressComplaints: (complaints as any[]).filter(c => c.status === 'InProgress').length,
             activeFacilities: facilities.length,
             pendingVisitors: visitors.length,
+            totalAnnouncements: (announcements as any).totalCount,
           });
           this.loading.set(false);
         });
@@ -63,14 +63,12 @@ export class DashboardComponent implements OnInit {
         forkJoin({
           bills: this.billService.getMyBills().pipe(catchError(() => of([]))),
           complaints: this.complaintService.getMyComplaints().pipe(catchError(() => of([]))),
-          bookings: this.bookingService.getMyBookings().pipe(catchError(() => of([]))),
           apartments: this.apartmentService.getMyApartments().pipe(catchError(() => of([]))),
           announcements: this.announcementService.getMine().pipe(catchError(() => of([]))),
-        }).subscribe(({ bills, complaints, bookings, apartments, announcements }) => {
+        }).subscribe(({ bills, complaints, apartments, announcements }) => {
           this.stats.set({
             myUnpaidBills: (bills as any[]).filter(b => b.status === 'Unpaid' || b.status === 'Overdue').length,
             myOpenComplaints: (complaints as any[]).filter(c => c.status === 'Open' || c.status === 'InProgress').length,
-            myBookings: bookings.length,
             myApartments: apartments.length,
             myAnnouncements: announcements.length,
           });
@@ -82,13 +80,11 @@ export class DashboardComponent implements OnInit {
         forkJoin({
           bills: this.billService.getMyBills().pipe(catchError(() => of([]))),
           complaints: this.complaintService.getMyComplaints().pipe(catchError(() => of([]))),
-          bookings: this.bookingService.getMyBookings().pipe(catchError(() => of([]))),
           announcements: this.announcementService.getMine().pipe(catchError(() => of([]))),
-        }).subscribe(({ bills, complaints, bookings, announcements }) => {
+        }).subscribe(({ bills, complaints, announcements }) => {
           this.stats.set({
             myUnpaidBills: (bills as any[]).filter(b => b.status === 'Unpaid' || b.status === 'Overdue').length,
             myOpenComplaints: (complaints as any[]).filter(c => c.status === 'Open' || c.status === 'InProgress').length,
-            myBookings: bookings.length,
             myAnnouncements: announcements.length,
           });
           this.loading.set(false);

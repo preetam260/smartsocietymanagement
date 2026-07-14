@@ -1,52 +1,63 @@
 <div class="page-header">
-      <h1>Residents</h1>
-      <div class="flex gap-sm">
-        <button class="btn" [class.btn-primary]="showCurrent()" [class.btn-outline]="!showCurrent()" (click)="showCurrent.set(true); load()">Current</button>
-        <button class="btn" [class.btn-primary]="!showCurrent()" [class.btn-outline]="showCurrent()" (click)="showCurrent.set(false); load()">All</button>
-        <a routerLink="/residents/new" class="btn btn-primary">+ Add Resident</a>
-      </div>
-    </div>
-    <div class="card"><div class="card-body" style="padding:0">
-      @if (loading()) { <app-loading-spinner /> }
-      @else if (!residents().length) { <app-empty-state message="No residents found" /> }
-      @else {
-        <div class="table-wrapper"><table>
-          <thead><tr><th>Name</th><th>Email</th><th>Apartment</th><th>Move In</th><th>Move Out</th><th>Vehicle</th><th>Actions</th></tr></thead>
-          <tbody>
-            @for (r of residents(); track r.id) {
-              <tr>
-                <td>{{ r.userName }}</td>
-                <td>{{ r.userEmail }}</td>
-                <td>{{ r.apartmentBlock }}-{{ r.apartmentNumber }}</td>
-                <td>{{ r.moveInDate | date:'mediumDate' }}</td>
-                <td>{{ r.moveOutDate ? (r.moveOutDate | date:'mediumDate') : '—' }}</td>
-                <td>{{ r.vehicleNumber || '—' }}</td>
-                <td class="actions">
-                  <a [routerLink]="['/residents', r.id, 'edit']" class="btn btn-outline btn-sm">Edit</a>
-                  @if (!r.moveOutDate) {
-                    <button class="btn btn-warning btn-sm" (click)="startMoveOut(r)">Move Out</button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table></div>
-      }
-    </div></div>
-    @if (moveOutResident()) {
-      <div class="modal-backdrop" (click)="moveOutResident.set(null)">
-        <div class="modal" (click)="$event.stopPropagation()">
-          <div class="modal-header"><h3>Move Out {{ moveOutResident()!.userName }}</h3></div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label>Move Out Date</label>
-              <input type="date" class="form-control" [value]="today" #dateInput>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-outline" (click)="moveOutResident.set(null)">Cancel</button>
-            <button class="btn btn-warning" (click)="confirmMoveOut(dateInput.value)">Confirm Move Out</button>
-          </div>
-        </div>
+  <h1>Residents</h1>
+  <div class="flex gap-sm">
+    <button class="btn" [class.btn-primary]="showCurrent()" [class.btn-outline]="!showCurrent()" (click)="toggleView(true)">Current</button>
+    <button class="btn" [class.btn-primary]="!showCurrent()" [class.btn-outline]="showCurrent()" (click)="toggleView(false)">All</button>
+    <a routerLink="/residents/new" class="btn btn-primary">+ Add Resident</a>
+  </div>
+</div>
+<div class="card"><div class="card-body" style="padding:0">
+  <div class="card-header" style="padding:var(--spacing-md)">
+    <input class="form-control" style="max-width:300px" placeholder="Search by name, email, apartment…" (input)="onSearch($event)" />
+  </div>
+  @if (loading()) { <app-loading-spinner /> }
+  @else if (!filtered().length) { <app-empty-state message="No residents found" /> }
+  @else {
+    <div class="table-wrapper"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Apartment</th><th>Move In</th><th>Move Out</th><th>Vehicle</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (r of paginated(); track r.id) {
+          <tr>
+            <td>{{ r.userName }}</td>
+            <td>{{ r.userEmail }}</td>
+            <td>{{ r.apartmentBlock }}-{{ r.apartmentNumber }}</td>
+            <td>{{ r.moveInDate | date:'mediumDate' }}</td>
+            <td>{{ r.moveOutDate ? (r.moveOutDate | date:'mediumDate') : '—' }}</td>
+            <td>{{ r.vehicleNumber || '—' }}</td>
+            <td class="actions">
+              <a [routerLink]="['/residents', r.id, 'edit']" class="btn btn-outline btn-sm">Edit</a>
+              @if (!r.moveOutDate) {
+                <button class="btn btn-warning btn-sm" (click)="startMoveOut(r)">Move Out</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table></div>
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="prevPage()">‹ Prev</button>
+        <span class="text-sm text-muted">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button class="btn btn-outline btn-sm" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next ›</button>
       </div>
     }
+  }
+</div></div>
+
+@if (moveOutResident()) {
+  <div class="modal-backdrop" (click)="moveOutResident.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><h3>Move Out {{ moveOutResident()!.userName }}</h3></div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Move Out Date</label>
+          <input type="date" class="form-control" [value]="today" #dateInput>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="moveOutResident.set(null)">Cancel</button>
+        <button class="btn btn-warning" (click)="confirmMoveOut(dateInput.value)">Confirm Move Out</button>
+      </div>
+    </div>
+  </div>
+}

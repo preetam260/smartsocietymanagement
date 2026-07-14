@@ -14,6 +14,10 @@ export class VisitorService {
     return this.http.post<VisitorResponse>(`${this.base}/register`, dto);
   }
 
+  getAll() {
+    return this.http.get<VisitorResponse[]>(`${this.base}`);
+  }
+
   getMyVisitors() {
     return this.http.get<VisitorResponse[]>(`${this.base}/my`);
   }

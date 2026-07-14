@@ -33,12 +33,9 @@ public class EmailServiceTest
     [Test]
     public void SendAsync_BuildsMessageAndAttemptsConnection()
     {
-        // We expect it to try to connect to 127.0.0.1:2525 and throw some form of connection or socket exception.
-        // This ensures the entire email-building code (happy path for MIME creation) runs and gets covered.
         var attachmentBytes = new byte[] { 1, 2, 3, 4 };
         var attachmentName = "qrcode.png";
 
-        // Assert that calling SendAsync throws an exception because there's no SMTP server running on 127.0.0.1:2525
         Assert.ThrowsAsync(Is.InstanceOf<Exception>(), async () => 
             await _service.SendAsync("recipient@test.com", "Test Subject", "<h1>Test Body</h1>", attachmentBytes, attachmentName)
         );
@@ -47,7 +44,6 @@ public class EmailServiceTest
     [Test]
     public void SendAsync_BuildsMessageWithoutAttachmentAndAttemptsConnection()
     {
-        // Assert that calling SendAsync without attachments also goes through building and fails to connect.
         Assert.ThrowsAsync(Is.InstanceOf<Exception>(), async () => 
             await _service.SendAsync("recipient@test.com", "Test Subject", "<h1>Test Body</h1>")
         );

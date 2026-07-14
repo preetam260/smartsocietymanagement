@@ -14,9 +14,10 @@ public class AnnouncementRepository : Repository<Announcement>, IAnnouncementRep
     }
 
     public async Task<IEnumerable<Announcement>> GetActiveByAudienceAsync(UserRole role)
-        => await _context.Announcements.Where(a => a.Audience == role && a.ExpiresAt > DateTime.UtcNow)
-                                    .OrderByDescending(a => a.CreatedAt)
-                                    .ToListAsync();
+        => await _context.Announcements
+                        .Where(a => (a.Audience == role || a.Audience == UserRole.All) && a.ExpiresAt > DateTime.UtcNow)
+                        .OrderByDescending(a => a.CreatedAt)
+                        .ToListAsync();
     public async Task<IEnumerable<Announcement>> GetPinnedAsync()
         => await _context.Announcements.Where(a => a.IsPinned && a.ExpiresAt > DateTime.UtcNow)
                                     .OrderByDescending(a => a.CreatedAt)

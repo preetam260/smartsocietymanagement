@@ -54,7 +54,6 @@ export class BillService {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
-  // Bill payment methods — Resident/Owner only, NOT in a shared service
   createPaymentOrder(billId: string) {
     return this.http.post<CreatePaymentOrderResponse>(`${this.paymentBase}/create-order/${billId}`, {});
   }

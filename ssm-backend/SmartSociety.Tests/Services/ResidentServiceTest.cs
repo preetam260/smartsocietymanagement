@@ -2,6 +2,7 @@ using Moq;
 using NUnit.Framework;
 using SmartSociety.Application.DTOs;
 using SmartSociety.Application.Exceptions;
+using SmartSociety.Application.Interfaces;
 using SmartSociety.Application.Services;
 using SmartSociety.Domain.Models;
 using SmartSociety.Repository.Interfaces;
@@ -15,6 +16,8 @@ public class ResidentServiceTest
     private Mock<IResidentRepository> _mockResidentRepo;
     private Mock<IUserRepository> _mockUserRepo;
     private Mock<IApartmentRepository> _mockApartmentRepo;
+    private Mock<INotificationService> _mockNotificationService;
+    private Mock<IEmailService> _mockEmailService;
     private ResidentService _service;
 
     [SetUp]
@@ -24,12 +27,14 @@ public class ResidentServiceTest
         _mockResidentRepo = new Mock<IResidentRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
         _mockApartmentRepo = new Mock<IApartmentRepository>();
+        _mockNotificationService = new Mock<INotificationService>();
+        _mockEmailService = new Mock<IEmailService>();
 
         _mockUow.Setup(uow => uow.Residents).Returns(_mockResidentRepo.Object);
         _mockUow.Setup(uow => uow.Users).Returns(_mockUserRepo.Object);
         _mockUow.Setup(uow => uow.Apartments).Returns(_mockApartmentRepo.Object);
 
-        _service = new ResidentService(_mockUow.Object);
+        _service = new ResidentService(_mockUow.Object, _mockNotificationService.Object, _mockEmailService.Object);
     }
 
     [Test]
@@ -224,9 +229,10 @@ public class ResidentServiceTest
         Guid id = Guid.NewGuid();
         Guid apartmentId = Guid.NewGuid();
         Guid ownerId = Guid.NewGuid();
-        var resident = new Resident { Id = id, ApartmentId = apartmentId, MoveInDate = DateTime.UtcNow.AddDays(-5) };
+        var resident = new Resident { Id = id, ApartmentId = apartmentId, UserId = Guid.NewGuid(), MoveInDate = DateTime.UtcNow.AddDays(-5) };
         _mockResidentRepo.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(resident);
         _mockApartmentRepo.Setup(a => a.GetByIdAsync(apartmentId)).ReturnsAsync(new Apartment { Id = apartmentId, OwnerId = ownerId });
+        _mockUserRepo.Setup(u => u.GetByIdAsync(resident.UserId)).ReturnsAsync(new User { Id = resident.UserId, Role = Domain.Enums.UserRole.Resident, Name = "Test Resident", Email = "test@res.com" });
 
         var mockBillRepo = new Mock<IBillRepository>();
         var unpaidBill = new Bill { Id = Guid.NewGuid(), ApartmentId = apartmentId, BilledToUserId = resident.UserId, Status = Domain.Enums.BillingStatus.Unpaid };

@@ -29,7 +29,10 @@ export class ApartmentListComponent implements OnInit {
   searchTerm = new Subject<string>();
 
   constructor() {
-    this.searchTerm.pipe(debounceTime(300), distinctUntilChanged(), switchMap(term => { this.loading.set(true); return this.svc.getAllPaged({ pageNumber: 1, pageSize: 10, search: term }); }), takeUntilDestroyed()).subscribe(r => { this.pagedResult.set(r); this.loading.set(false); });
+    this.searchTerm.pipe(debounceTime(300), distinctUntilChanged(), switchMap(term => { this.loading.set(true); 
+      return this.svc.getAllPaged({ 
+        pageNumber: 1, pageSize: 10, search: term }); 
+      }), takeUntilDestroyed()).subscribe(r => { this.pagedResult.set(r); this.loading.set(false); });
   }
 
   ngOnInit() { 

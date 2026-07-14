@@ -21,8 +21,16 @@ public class BookingController : ControllerBase
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResult<BookingResponseDto>>> GetAll([FromQuery] PaginationQuery query)
+    {
+        var result = await _bookingService.GetAllPagedAsync(query);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Admin,Resident")]
     public async Task<ActionResult<BookingResponseDto>> GetById(Guid id)
     {
         var booking = await _bookingService.GetByIdAsync(id);
@@ -41,7 +49,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet("my")]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Resident")]
     public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetMyBookings()
     {
         var bookings = await _bookingService.GetMyBookingsAsync(GetUserId());
@@ -57,7 +65,8 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Resident")]
+
     public async Task<ActionResult<BookingResponseDto>> Create([FromBody] CreateBookingDto dto)
     {
         var booking = await _bookingService.CreateAsync(dto, GetUserId());
@@ -65,7 +74,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("{id:guid}/create-order")]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Resident")]
     public async Task<ActionResult<CreatePaymentOrderResponseDto>> CreatePaymentOrder(Guid id)
     {
         var order = await _bookingService.CreatePaymentOrderAsync(id, GetUserId());
@@ -73,7 +82,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("{id:guid}/verify-payment")]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Resident")]
     public async Task<ActionResult<BookingResponseDto>> VerifyPayment(Guid id, [FromBody] VerifyBookingPaymentDto dto)
     {
         dto.BookingId = id;
@@ -82,7 +91,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/cancel")]
-    [Authorize(Roles = "Admin,Resident,Owner")]
+    [Authorize(Roles = "Resident")]
     public async Task<IActionResult> Cancel(Guid id)
     {
         await _bookingService.CancelAsync(id, GetUserId());

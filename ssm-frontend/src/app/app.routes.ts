@@ -75,13 +75,19 @@ export const routes: Routes = [
       {
         path: 'bookings',
         canActivate: [roleGuard],
-        data: { roles: ['Admin', 'Resident', 'Owner'] },
+        data: { roles: ['Resident'] },
         loadChildren: () => import('./features/bookings/bookings.routes').then(m => m.BOOKINGS_ROUTES)
+      },
+      {
+        path: 'admin/bookings',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadComponent: () => import('./features/bookings/all-bookings/all-bookings.component').then(m => m.AllBookingsComponent)
       },
       {
         path: 'visitors',
         canActivate: [roleGuard],
-        data: { roles: ['Admin', 'Resident', 'Owner', 'SecurityStaff'] },
+        data: { roles: ['Admin', 'Resident', 'SecurityStaff'] },
         loadChildren: () => import('./features/visitors/visitors.routes').then(m => m.VISITORS_ROUTES)
       },
       {

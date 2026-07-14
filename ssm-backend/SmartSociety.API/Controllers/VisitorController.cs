@@ -24,6 +24,14 @@ public class VisitorController : ControllerBase
     private Guid GetUserId() =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    [HttpGet]
+    [Authorize(Roles = "Admin,SecurityStaff")]
+    public async Task<ActionResult<IEnumerable<VisitorResponseDto>>> GetAll()
+    {
+        var visitors = await _visitorService.GetAllAsync();
+        return Ok(visitors);
+    }
+
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "Admin,SecurityStaff")]
     public async Task<ActionResult<VisitorResponseDto>> GetById(Guid id)
@@ -31,6 +39,7 @@ public class VisitorController : ControllerBase
         var visitor = await _visitorService.GetByIdAsync(id);
         return Ok(visitor);
     }
+
 
     [HttpGet("apartment/{apartmentId:guid}")]
     [Authorize(Roles = "Admin")]

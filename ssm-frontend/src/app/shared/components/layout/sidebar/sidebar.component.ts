@@ -32,7 +32,7 @@ export class SidebarComponent {
     { path: '/bills', label: 'Bills', icon: '💰', roles: ['Admin', 'Resident', 'Owner'] },
     { path: '/facilities', label: 'Facilities', icon: '🏋️', roles: ['Admin', 'Resident', 'Owner'] },
     { path: '/bookings', label: 'Bookings', icon: '📅', roles: ['Admin', 'Resident', 'Owner'] },
-    { path: '/visitors', label: 'Visitors', icon: '🚶', roles: ['Admin', 'Resident', 'Owner', 'SecurityStaff'] },
+    { path: '/visitors', label: 'Visitors', icon: '🚶', roles: ['Admin', 'Resident', 'SecurityStaff'] },
     { path: '/announcements', label: 'Announcements', icon: '📢', roles: 'all' },
     { path: '/notifications', label: 'Notifications', icon: '🔔', roles: 'all' },
   ];

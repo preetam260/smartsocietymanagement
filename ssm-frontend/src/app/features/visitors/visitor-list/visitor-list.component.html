@@ -1,53 +1,63 @@
 <div class="page-header">
-      <h1>Visitors</h1>
-      <div class="flex gap-sm">
-        @if (auth.role() === 'SecurityStaff') {
-          <a routerLink="/visitors/checkin" class="btn btn-primary">Check In Visitor</a>
-        }
-      </div>
+  <h1>Visitors</h1>
+  <div class="flex gap-sm">
+    @if (auth.role() === 'SecurityStaff') {
+      <a routerLink="/visitors/checkin" class="btn btn-primary">Check In Visitor</a>
+    }
+  </div>
+</div>
+<div class="card">
+  <div class="card-header">
+    <div class="flex gap-sm" style="flex-wrap:wrap">
+      <input class="form-control" style="max-width:240px" placeholder="Search name, email, purpose…" (input)="onSearch($event)" />
+      <select class="form-control" style="max-width:200px" (change)="onFilter($event)">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="CheckedIn">Checked In</option>
+        <option value="CheckedOut">Checked Out</option>
+        <option value="Expired">Expired</option>
+        <option value="Denied">Denied</option>
+      </select>
     </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="flex gap-sm">
-          <select class="form-control" style="max-width:200px" (change)="onFilter($event)">
-            <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="CheckedIn">Checked In</option>
-            <option value="CheckedOut">Checked Out</option>
-            <option value="Expired">Expired</option>
-            <option value="Denied">Denied</option>
-          </select>
+  </div>
+  <div class="card-body" style="padding:0">
+    @if (loading()) { <app-loading-spinner /> }
+    @else if (!filtered().length) { <app-empty-state message="No visitors found" /> }
+    @else {
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Purpose</th><th>Apartment</th><th>ETA</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (v of paginated(); track v.id) {
+            <tr>
+              <td>{{ v.name }}</td>
+              <td>{{ v.email }}</td>
+              <td>{{ v.purpose }}</td>
+              <td>{{ v.apartmentBlock }}-{{ v.apartmentNumber }}</td>
+              <td>{{ v.eta | date:'short' }}</td>
+              <td><app-status-badge [status]="v.status" /></td>
+              <td class="actions">
+                @if (v.status === 'Approved' && (auth.role() === 'Admin' || auth.role() === 'SecurityStaff')) {
+                  <button class="btn btn-danger btn-sm" (click)="deny(v)">Deny</button>
+                }
+                @if (v.status === 'CheckedIn' && auth.role() === 'SecurityStaff') {
+                  <button class="btn btn-outline btn-sm" (click)="checkout(v)">Check Out</button>
+                }
+                @if (auth.role() === 'Admin' || auth.role() === 'SecurityStaff') {
+                  <a [routerLink]="['/visitors', v.id, 'entries']" class="btn btn-outline btn-sm">Entries</a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table></div>
+      @if (totalPages() > 1) {
+        <div class="pagination-bar">
+          <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="prevPage()">‹ Prev</button>
+          <span class="text-sm text-muted">Page {{ currentPage() }} of {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next ›</button>
         </div>
-      </div>
-      <div class="card-body" style="padding:0">
-        @if (loading()) { <app-loading-spinner /> }
-        @else if (!visitors().length) { <app-empty-state message="No visitors found" /> }
-        @else {
-          <div class="table-wrapper"><table>
-            <thead><tr><th>Name</th><th>Email</th><th>Purpose</th><th>Apartment</th><th>ETA</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              @for (v of visitors(); track v.id) {
-                <tr>
-                  <td>{{ v.name }}</td>
-                  <td>{{ v.email }}</td>
-                  <td>{{ v.purpose }}</td>
-                  <td>{{ v.apartmentBlock }}-{{ v.apartmentNumber }}</td>
-                  <td>{{ v.eta | date:'short' }}</td>
-                  <td><app-status-badge [status]="v.status" /></td>
-                  <td class="actions">
-                    @if (v.status === 'Pending' && auth.role() === 'Admin') {
-                      <button class="btn btn-danger btn-sm" (click)="deny(v)">Deny</button>
-                    }
-                    @if (v.status === 'CheckedIn' && auth.role() === 'SecurityStaff') {
-                      <button class="btn btn-outline btn-sm" (click)="checkout(v)">Check Out</button>
-                    }
-                    <a [routerLink]="['/visitors', v.id, 'entries']" class="btn btn-outline btn-sm">Entries</a>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table></div>
-        }
-      </div>
-    </div>
+      }
+    }
+  </div>
+</div>

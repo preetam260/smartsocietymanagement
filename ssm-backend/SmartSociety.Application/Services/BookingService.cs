@@ -18,6 +18,20 @@ public class BookingService : IBookingService
         _notificationService = notificationService;
     }
 
+    public async Task<IEnumerable<BookingResponseDto>> GetAllAsync()
+    {
+        var bookings = await _uow.Bookings.GetAllAsync();
+        return await MapToDtoListAsync(bookings);
+    }
+
+    public async Task<PagedResult<BookingResponseDto>> GetAllPagedAsync(PaginationQuery query)
+    {
+        var bookings = await _uow.Bookings.GetAllAsync();
+        var dtos = await MapToDtoListAsync(bookings);
+        return PagedResult<BookingResponseDto>.Create(dtos, query.PageNumber, query.PageSize, query.Search,
+            new Func<BookingResponseDto, string?>[] { b => b.UserName, b => b.FacilityName });
+    }
+
     public async Task<BookingResponseDto> GetByIdAsync(Guid id)
     {
         var booking = await _uow.Bookings.GetByIdAsync(id)
@@ -56,6 +70,10 @@ public class BookingService : IBookingService
         var facility = await _uow.Facilities.GetByIdAsync(dto.FacilityId)
             ?? throw new NotFoundException("Facility", dto.FacilityId);
 
+        var resident = await _uow.Residents.GetCurrentByUserIdAsync(userId);
+        if (resident == null)
+            throw new UnauthorizedException("You must be an active resident to book facilities.");
+
         if (!facility.IsActive)
             throw new BadRequestException("This facility is not currently available for booking.");
 
@@ -64,6 +82,8 @@ public class BookingService : IBookingService
 
         if (dto.StartTime <= DateTime.UtcNow)
             throw new BadRequestException("Booking must be scheduled for a future time.");
+
+
 
         await using var transaction = await _uow.BeginTransactionAsync();
         try
@@ -79,7 +99,7 @@ public class BookingService : IBookingService
             {
                 FacilityId = dto.FacilityId,
                 UserId = userId,
-                Date = dto.Date,
+                Date = dto.StartTime.Date,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
                 TotalCost = totalCost,

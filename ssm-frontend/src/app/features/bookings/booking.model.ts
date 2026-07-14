@@ -17,8 +17,9 @@ export interface BookingResponse {
 
 export interface CreateBookingDto {
   facilityId: string;
-  startTime: string;
-  endTime: string;
+  date: string;       
+  startTime: string;  
+  endTime: string;  
 }
 
 export interface CreatePaymentOrderResponse {

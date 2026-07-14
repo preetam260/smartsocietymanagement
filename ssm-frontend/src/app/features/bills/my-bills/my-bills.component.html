@@ -1,12 +1,18 @@
 <div class="page-header"><h1>My Bills</h1></div>
-    @if (loading()) { <app-loading-spinner /> }
-    @else if (!bills().length) { <app-empty-state message="No bills found" /> }
-    @else {
-      <div class="card"><div class="card-body" style="padding:0">
+@if (loading()) { <app-loading-spinner /> }
+@else if (!bills().length) { <app-empty-state message="No bills found" /> }
+@else {
+  <div class="card">
+    <div class="card-header">
+      <input class="form-control" style="max-width:260px" placeholder="Search period, status, apartment…" (input)="onSearch($event)" />
+    </div>
+    <div class="card-body" style="padding:0">
+      @if (!filtered().length) { <app-empty-state message="No bills match your search" /> }
+      @else {
         <div class="table-wrapper"><table>
           <thead><tr><th>Apartment</th><th>Period</th><th>Total</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            @for (b of bills(); track b.id) {
+            @for (b of paginated(); track b.id) {
               <tr>
                 <td>{{ b.apartmentBlock }}-{{ b.apartmentNumber }}</td>
                 <td>{{ b.period }}</td>
@@ -27,5 +33,14 @@
             }
           </tbody>
         </table></div>
-      </div></div>
-    }
+        @if (totalPages() > 1) {
+          <div class="pagination-bar">
+            <button class="btn btn-outline btn-sm" [disabled]="currentPage() === 1" (click)="prevPage()">‹ Prev</button>
+            <span class="text-sm text-muted">Page {{ currentPage() }} of {{ totalPages() }}</span>
+            <button class="btn btn-outline btn-sm" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next ›</button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

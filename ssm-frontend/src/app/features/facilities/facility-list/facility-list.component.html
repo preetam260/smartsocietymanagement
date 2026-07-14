@@ -36,7 +36,12 @@
               <p class="text-sm text-muted mb-md">{{ f.description }}</p>
               <div class="flex justify-between items-center">
                 <span class="text-sm">{{ f.hourlyRate | currency:'INR' }}/hr · {{ f.capacity }} people</span>
-                <a routerLink="/bookings/book" class="btn btn-primary btn-sm">Book</a>
+                <!-- Only Resident (or Owner-with-residency effectiveRole=Resident) can book -->
+                @if (auth.effectiveRole() === 'Resident') {
+                  <a routerLink="/bookings/book" class="btn btn-primary btn-sm">Book</a>
+                } @else {
+                  <span class="text-xs text-muted">View only</span>
+                }
               </div>
             </div></div>
           }

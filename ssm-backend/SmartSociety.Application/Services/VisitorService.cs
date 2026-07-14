@@ -26,12 +26,19 @@ public class VisitorService : IVisitorService
         _notificationService = notificationService;
     }
 
+    public async Task<IEnumerable<VisitorResponseDto>> GetAllAsync()
+    {
+        var visitors = await _uow.Visitors.GetAllAsync();
+        return await MapToDtoListAsync(visitors);
+    }
+
     public async Task<VisitorResponseDto> GetByIdAsync(Guid id)
     {
         var visitor = await _uow.Visitors.GetByIdAsync(id)
             ?? throw new NotFoundException("Visitor", id);
         return await MapToDtoAsync(visitor);
     }
+
 
     public async Task<IEnumerable<VisitorResponseDto>> GetByApartmentIdAsync(Guid apartmentId)
     {

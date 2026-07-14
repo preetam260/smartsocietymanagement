@@ -16,6 +16,13 @@ export class AuthService {
   isLoggedIn = computed(() => !!this.currentUser());
   role = computed<UserRole | null>(() => this.currentUser()?.role ?? null);
 
+  effectiveRole = computed<UserRole | null>(() => {
+    const user = this.currentUser();
+    if (!user) return null;
+    if (user.role === 'Owner' && user.hasActiveResidency) return 'Resident';
+    return user.role;
+  });
+
   private loggingOut = false;
 
   login(dto: LoginRequest) {
