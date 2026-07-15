@@ -63,10 +63,8 @@ export class MyBillsComponent implements OnInit {
   payBill(bill: BillResponse) {
     this.paying.set(true);
     this.svc.createPaymentOrder(bill.id).pipe(
-      switchMap(order => this.svc.verifyPayment({
+      switchMap(order => this.svc.completePayment({
         orderId: order.orderId,
-        paymentId: generateDummyPaymentId(),
-        signature: DUMMY_SIGNATURE,
       }))
     ).subscribe({
       next: () => { this.toast.success('Payment successful!'); this.paying.set(false); this.load(); },

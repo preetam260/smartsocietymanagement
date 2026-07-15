@@ -148,23 +148,37 @@ public class BillService : IBillService
 
     public async Task ApplyPenaltiesAsync()
     {
+        var today = DateTime.UtcNow;
         var allBills = await _uow.Bills.GetAllAsync();
-        var overdue = allBills
-            .Where(b => (b.Status == BillingStatus.Unpaid || b.Status == BillingStatus.Processing)
-                        && b.DueDate < DateTime.UtcNow)
-            .ToList();
+        var overdue = allBills.Where(b => (b.Status == BillingStatus.Unpaid || b.Status == BillingStatus.Overdue)
+                && b.DueDate < today).ToList();
 
         foreach (var bill in overdue)
         {
-            bill.Penalty = Math.Round(bill.BaseAmount * 0.05m, 2);
+            var wasAlreadyOverdue = bill.Status == BillingStatus.Overdue;
+            var oldPenalty = bill.Penalty;
+            var monthsOverdue = ((today.Year - bill.DueDate.Year) * 12) + today.Month - bill.DueDate.Month;
+            monthsOverdue = Math.Max(1, monthsOverdue);
+
+            const decimal penaltyRate = 0.05m;
+            var newPenalty = Math.Round(bill.BaseAmount * penaltyRate * monthsOverdue, 2);
+            var penaltyChanged = oldPenalty != newPenalty;
+
+            bill.Penalty = newPenalty;
             bill.Status = BillingStatus.Overdue;
             bill.UpdatedAt = DateTime.UtcNow;
+
             await _uow.Bills.UpdateAsync(bill);
 
-            await _notificationService.CreateAsync(
-                bill.BilledToUserId,
-                "Bill Overdue",
-                $"Your maintenance bill for {bill.Period} is overdue. A penalty of ₹{bill.Penalty} has been applied.");
+            if (!wasAlreadyOverdue || penaltyChanged)
+            {
+                await _notificationService.CreateAsync(
+                    bill.BilledToUserId,
+                    "Bill Overdue",
+                    $"Your maintenance bill for {bill.Period} " +
+                    $"is {monthsOverdue} month(s) overdue. " +
+                    $"The current penalty is ₹{bill.Penalty}.");
+            }
         }
 
         await _uow.SaveChangesAsync();

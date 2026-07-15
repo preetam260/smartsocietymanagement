@@ -31,8 +31,6 @@ export interface CreatePaymentOrderResponse {
   currency: string;
 }
 
-export interface VerifyPaymentDto {
+export interface CompletePaymentDto {
   orderId: string;
-  paymentId: string;
-  signature: string;
 }

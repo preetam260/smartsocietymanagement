@@ -12,10 +12,7 @@ public class BillingBackgroundService : BackgroundService
     private readonly IConfiguration _config;
     private readonly ILogger<BillingBackgroundService> _logger;
 
-    public BillingBackgroundService(
-        IServiceProvider serviceProvider,
-        IConfiguration config,
-        ILogger<BillingBackgroundService> logger)
+    public BillingBackgroundService(IServiceProvider serviceProvider, IConfiguration config, ILogger<BillingBackgroundService> logger)
     {
         _serviceProvider = serviceProvider;
         _config = config;
@@ -28,32 +25,55 @@ public class BillingBackgroundService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = DateTime.UtcNow;
-
-            var nextMidnight = now.Date.AddDays(1);
-            var delay = nextMidnight - now;
-
-            _logger.LogInformation("BillingBackgroundService: next run at {NextRun} (in {Delay})", nextMidnight, delay);
-            await Task.Delay(delay, stoppingToken);
-
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<SmartSocietyDbContext>();
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                using var scope =
+                    _serviceProvider.CreateScope();
+
+                var context =
+                    scope.ServiceProvider
+                        .GetRequiredService<SmartSocietyDbContext>();
+
+                var notificationService =
+                    scope.ServiceProvider
+                        .GetRequiredService<INotificationService>();
 
                 var today = DateTime.UtcNow;
 
+                _logger.LogInformation(
+                    "BillingBackgroundService running billing checks at {RunTime}.",
+                    today);
+
                 if (today.Day == 1)
                 {
-                    await GenerateMonthlyBillsAsync(context, notificationService, today);
+                    await GenerateMonthlyBillsAsync(
+                        context,
+                        notificationService,
+                        today);
                 }
-                await MarkOverdueBillsAsync(context, notificationService, today);
+
+                await MarkOverdueBillsAsync(
+                    context,
+                    notificationService,
+                    today);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "BillingBackgroundService encountered an error.");
+                _logger.LogError(
+                    ex,
+                    "BillingBackgroundService encountered an error.");
             }
+
+            var now = DateTime.UtcNow;
+            var nextMidnight = now.Date.AddDays(1);
+            var delay = nextMidnight - now;
+
+            _logger.LogInformation(
+                "BillingBackgroundService: next run at {NextRun} (in {Delay})",
+                nextMidnight,
+                delay);
+
+            await Task.Delay(delay, stoppingToken);
         }
     }
 
@@ -149,7 +169,6 @@ public class BillingBackgroundService : BackgroundService
             .Where(b =>
                 (
                     b.Status == BillingStatus.Unpaid ||
-                    b.Status == BillingStatus.Processing ||
                     b.Status == BillingStatus.Overdue
                 )
                 && b.DueDate < today)

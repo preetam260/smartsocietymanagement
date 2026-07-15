@@ -77,7 +77,7 @@ export class DashboardComponent implements OnInit {
   role = computed(() => this.auth.effectiveRole());
 
   doughnutData = signal<ChartData<'doughnut'>>({labels: [],datasets: []});
-
+  
   barData = signal<ChartData<'bar'>>({labels: [],datasets: []});
 
   doughnutOptions: ChartOptions<'doughnut'> = {
@@ -353,7 +353,7 @@ export class DashboardComponent implements OnInit {
             }
           ]
         });
-        
+
         this.barData.set({
           labels: [
             'Apartments',

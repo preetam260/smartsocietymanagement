@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { BillResponse, CreateBillDto, CreatePaymentOrderResponse, VerifyPaymentDto } from './bill.model';
+import { BillResponse, CreateBillDto, CreatePaymentOrderResponse, CompletePaymentDto } from './bill.model';
 import { PagedResult, PaginationQuery } from '../../core/models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
@@ -58,7 +58,7 @@ export class BillService {
     return this.http.post<CreatePaymentOrderResponse>(`${this.paymentBase}/create-order/${billId}`, {});
   }
 
-  verifyPayment(dto: VerifyPaymentDto) {
-    return this.http.post<BillResponse>(`${this.paymentBase}/verify`, dto);
+  completePayment(dto: CompletePaymentDto) {
+    return this.http.post<BillResponse>(`${this.paymentBase}/complete`, dto);
   }
 }
