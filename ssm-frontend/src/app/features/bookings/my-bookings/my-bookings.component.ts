@@ -7,7 +7,6 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { DatePipe, CurrencyPipe } from '@angular/common';
-import { generateDummyPaymentId, DUMMY_SIGNATURE } from '../../../core/utils/payment-utils';
 import { switchMap } from 'rxjs';
 
 @Component({
@@ -32,15 +31,23 @@ export class MyBookingsComponent implements OnInit {
 
   payBooking(booking: BookingResponse) {
     this.paying.set(true);
+
     this.svc.createPaymentOrder(booking.id).pipe(
-      switchMap(order => this.svc.verifyPayment(booking.id, {
-        orderId: order.orderId,
-        paymentId: generateDummyPaymentId(),
-        signature: DUMMY_SIGNATURE,
-      }))
+      switchMap(order =>
+        this.svc.completePayment(
+          booking.id,
+          order.orderId
+        )
+      )
     ).subscribe({
-      next: () => { this.toast.success('Payment successful!'); this.paying.set(false); this.load(); },
-      error: () => this.paying.set(false)
+      next: () => {
+        this.toast.success('Payment successful!');
+        this.paying.set(false);
+        this.load();
+      },
+      error: () => {
+        this.paying.set(false);
+      }
     });
   }
 

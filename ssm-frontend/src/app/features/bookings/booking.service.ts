@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { BookingResponse, CreateBookingDto, CreatePaymentOrderResponse, VerifyBookingPaymentDto } from './booking.model';
+import { BookingResponse, CreateBookingDto, CreatePaymentOrderResponse } from './booking.model';
 import { PagedResult, PaginationQuery } from '../../core/models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
@@ -52,10 +52,16 @@ export class BookingService {
   }
 
   createPaymentOrder(bookingId: string) {
-    return this.http.post<CreatePaymentOrderResponse>(`${this.base}/${bookingId}/create-order`, {});
+    return this.http.post<CreatePaymentOrderResponse>(
+      `${this.base}/${bookingId}/create-order`,
+      {}
+    );
   }
 
-  verifyPayment(bookingId: string, dto: VerifyBookingPaymentDto) {
-    return this.http.post<BookingResponse>(`${this.base}/${bookingId}/verify-payment`, dto);
+  completePayment(bookingId: string, orderId: string) {
+    return this.http.post<BookingResponse>(
+      `${this.base}/${bookingId}/complete-payment`,
+      { orderId }
+    );
   }
 }

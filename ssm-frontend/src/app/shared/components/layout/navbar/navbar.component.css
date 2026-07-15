@@ -1,73 +1,117 @@
 .navbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: var(--navbar-height);
-      padding: 0 var(--spacing-xl);
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border-light);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .navbar-left {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-    }
-    .hamburger {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: var(--spacing-xs);
-      color: var(--color-text);
-    }
-    .brand {
-      font-size: var(--font-size-xl);
-      font-weight: 700;
-      color: var(--color-primary);
-    }
-    .navbar-right {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-lg);
-    }
-    .notification-bell {
-      position: relative;
-      font-size: 1.25rem;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .badge-count {
-      position: absolute;
-      top: -6px;
-      right: -8px;
-      background: var(--color-danger);
-      color: #fff;
-      font-size: 0.625rem;
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 9999px;
-      min-width: 18px;
-      text-align: center;
-    }
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-    .user-name {
-      font-size: var(--font-size-sm);
-      font-weight: 600;
-      color: var(--color-text);
-    }
-    .user-role {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-muted);
-    }
-    @media (max-width: 768px) {
-      .hamburger { display: block; }
-      .user-info { display: none; }
-    }
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  height: var(--navbar-height);
+  padding: 0 var(--spacing-xl);
+
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-left,
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-left {
+  gap: var(--spacing-md);
+}
+
+.navbar-right {
+  gap: var(--spacing-lg);
+}
+
+.hamburger {
+  display: none;
+
+  padding: var(--spacing-xs);
+
+  background: none;
+  border: 0;
+
+  font-size: 1.4rem;
+  color: var(--color-text);
+
+  cursor: pointer;
+}
+
+.brand {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+
+  color: var(--color-primary);
+}
+
+.notification-bell {
+  position: relative;
+
+  font-size: 1.2rem;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.badge-count {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+
+  min-width: 18px;
+
+  padding: 1px 5px;
+
+  background: var(--color-danger);
+  color: #ffffff;
+
+  border-radius: 9999px;
+
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  line-height: 1.25;
+}
+
+.user-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+
+  color: var(--color-text);
+}
+
+.user-role {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 var(--spacing-md);
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .navbar-right {
+    gap: var(--spacing-md);
+  }
+}

@@ -1,271 +1,614 @@
 <div class="dashboard-page">
-  @if (loading()) {
-    <app-loading-spinner />
-  } @else {
-    <div class="dashboard-welcome">
-      <h1>Welcome back, {{ userName() }} 👋</h1>
-      <p class="welcome-sub">Here's what's happening in your society today.</p>
-    </div>
 
-    @switch (auth.effectiveRole()) {
+  @if (loading()) {
+    <div class="dashboard-loading">
+      <app-loading-spinner />
+      <p>Loading dashboard...</p>
+    </div>
+  } @else {
+
+    <section class="dashboard-header">
+      <div>
+        <p class="dashboard-eyebrow">
+          {{ role() }} DASHBOARD
+        </p>
+
+        <h1>
+          Welcome back, {{ userName() }}
+        </h1>
+
+        <p class="dashboard-subtitle">
+          Here's a quick overview of your society activity.
+        </p>
+      </div>
+
+      <div class="role-chip">
+        {{ role() }}
+      </div>
+    </section>
+
+    @switch (role()) {
 
       @case ('Admin') {
-        <div class="stats-grid">
-          @if (stats().totalUsers > 0) {
-            <a routerLink="/users" class="stat-link">
-              <app-stat-card label="Total Users" [value]="stats().totalUsers" icon="👥" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Total Users" [value]="0" icon="👥" />
-            </div>
-          }
 
-          @if (stats().openComplaints > 0) {
-            <a routerLink="/complaints" class="stat-link">
-              <app-stat-card label="Open Complaints" [value]="stats().openComplaints" icon="📝" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Open Complaints" [value]="0" icon="📝" />
-            </div>
-          }
+        <section class="stats-grid">
+          <a routerLink="/users" class="stat-link">
+            <app-stat-card
+              label="Total Users"
+              [value]="stats().totalUsers ?? 0"
+              icon="👥" />
+          </a>
 
-          @if (stats().inProgressComplaints > 0) {
-            <a routerLink="/complaints" class="stat-link">
-              <app-stat-card label="In Progress" [value]="stats().inProgressComplaints" icon="🔄" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="In Progress" [value]="0" icon="🔄" />
-            </div>
-          }
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card
+              label="Open Complaints"
+              [value]="stats().openComplaints ?? 0"
+              icon="📝" />
+          </a>
 
-          @if (stats().activeFacilities > 0) {
-            <a routerLink="/facilities" class="stat-link">
-              <app-stat-card label="Active Facilities" [value]="stats().activeFacilities" icon="🏋️" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Active Facilities" [value]="0" icon="🏋️" />
-            </div>
-          }
+          <a routerLink="/visitors" class="stat-link">
+            <app-stat-card
+              label="Pending Visitors"
+              [value]="stats().pendingVisitors ?? 0"
+              icon="🚶" />
+          </a>
 
-          @if (stats().pendingVisitors > 0) {
-            <a routerLink="/visitors" class="stat-link">
-              <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Pending Visitors" [value]="0" icon="⏳" />
-            </div>
-          }
+          <a routerLink="/facilities" class="stat-link">
+            <app-stat-card
+              label="Active Facilities"
+              [value]="stats().activeFacilities ?? 0"
+              icon="🏋️" />
+          </a>
+        </section>
 
-          @if (stats().totalAnnouncements > 0) {
-            <a routerLink="/announcements" class="stat-link announcement-content">
-              <app-stat-card label="Announcements" [value]="stats().totalAnnouncements" icon="📢" />
-            </a>
-          } @else {
-            <div class="stat-link announcement-content">
-              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+        <section class="analytics-grid">
+
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  COMPLAINTS
+                </span>
+
+                <h2>
+                  Complaint Status
+                </h2>
+              </div>
+
+              <a routerLink="/complaints">
+                View all
+              </a>
             </div>
-          }
-        </div>
-        <div class="quick-actions">
-          <h2>Quick Actions</h2>
+
+            <p class="card-description">
+              Current distribution of society complaints.
+            </p>
+
+            <div class="chart-container doughnut-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="doughnutData()"
+                  [options]="doughnutOptions"
+                  type="doughnut">
+                </canvas>
+              }
+            </div>
+          </article>
+
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  OPERATIONS
+                </span>
+
+                <h2>
+                  Society Overview
+                </h2>
+              </div>
+            </div>
+
+            <p class="card-description">
+              Comparison of key operational activity.
+            </p>
+
+            <div class="chart-container bar-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="barData()"
+                  [options]="barOptions"
+                  type="bar">
+                </canvas>
+              }
+            </div>
+          </article>
+
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="dashboard-card actions-section">
+          <div class="card-heading">
+            <div>
+              <span class="card-eyebrow">
+                SHORTCUTS
+              </span>
+
+              <h2>
+                Quick Actions
+              </h2>
+            </div>
+          </div>
+
           <div class="action-grid">
+
             <a routerLink="/users/new" class="action-card">
-              <span class="action-icon">➕</span>
-              <span>Add User</span>
+              <span class="action-icon">👤</span>
+
+              <div>
+                <strong>Add User</strong>
+                <small>Create a new account</small>
+              </div>
             </a>
+
             <a routerLink="/apartments/new" class="action-card">
               <span class="action-icon">🏢</span>
-              <span>Add Apartment</span>
+
+              <div>
+                <strong>Add Apartment</strong>
+                <small>Register a property</small>
+              </div>
             </a>
+
             <a routerLink="/bills/new" class="action-card">
               <span class="action-icon">💳</span>
-              <span>Create Bill</span>
+
+              <div>
+                <strong>Create Bill</strong>
+                <small>Generate maintenance bill</small>
+              </div>
             </a>
+
             <a routerLink="/announcements/new" class="action-card">
               <span class="action-icon">📢</span>
-              <span>Post Announcement</span>
+
+              <div>
+                <strong>Announcement</strong>
+                <small>Post a society update</small>
+              </div>
             </a>
-            <a routerLink="/complaints" class="action-card">
-              <span class="action-icon">📋</span>
-              <span>Manage Complaints</span>
-            </a>
-            <a routerLink="/residents/new" class="action-card">
-              <span class="action-icon">🏠</span>
-              <span>Add Resident</span>
-            </a>
-            <a routerLink="/visitors" class="action-card">
-              <span class="action-icon">🚶</span>
-              <span>All Visitors</span>
-            </a>
-            <a routerLink="/admin/bookings" class="action-card">
-              <span class="action-icon">📅</span>
-              <span>All Bookings</span>
-            </a>
+
           </div>
-        </div>
+        </section>
       }
 
       @case ('Owner') {
-        <!-- Pure owner: read-only, no booking, no visitors -->
-        <div class="stats-grid">
-          @if (stats().myApartments > 0) {
-            <a routerLink="/apartments/my" class="stat-link">
-              <app-stat-card label="My Apartments" [value]="stats().myApartments" icon="🏢" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="My Apartments" [value]="0" icon="🏢" />
-            </div>
-          }
 
-          @if (stats().myUnpaidBills > 0) {
-            <a routerLink="/bills/my" class="stat-link">
-              <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Unpaid Bills" [value]="0" icon="💰" />
-            </div>
-          }
+        <section class="stats-grid">
 
-          @if (stats().myOpenComplaints > 0) {
-            <a routerLink="/complaints" class="stat-link">
-              <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Active Complaints" [value]="0" icon="📝" />
-            </div>
-          }
+          <a routerLink="/apartments/my" class="stat-link">
+            <app-stat-card
+              label="My Apartments"
+              [value]="stats().myApartments ?? 0"
+              icon="🏢" />
+          </a>
 
-          @if (stats().myAnnouncements > 0) {
-            <a routerLink="/announcements" class="stat-link">
-              <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+          <a routerLink="/bills/my" class="stat-link">
+            <app-stat-card
+              label="Unpaid Bills"
+              [value]="stats().myUnpaidBills ?? 0"
+              icon="💰" />
+          </a>
+
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card
+              label="Active Complaints"
+              [value]="stats().myOpenComplaints ?? 0"
+              icon="📝" />
+          </a>
+
+          <a routerLink="/announcements" class="stat-link">
+            <app-stat-card
+              label="Announcements"
+              [value]="stats().myAnnouncements ?? 0"
+              icon="📢" />
+          </a>
+
+        </section>
+
+        <section class="analytics-grid">
+
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  PAYMENTS
+                </span>
+
+                <h2>
+                  Bill Status
+                </h2>
+              </div>
+
+              <a routerLink="/bills/my">
+                View bills
+              </a>
             </div>
-          }
-        </div>
-        <div class="quick-actions">
-          <h2>Quick Actions</h2>
+
+            <p class="card-description">
+              Overview of your maintenance bill status.
+            </p>
+
+            <div class="chart-container doughnut-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="doughnutData()"
+                  [options]="doughnutOptions"
+                  type="doughnut">
+                </canvas>
+              }
+            </div>
+          </article>
+
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  ACTIVITY
+                </span>
+
+                <h2>
+                  Property Activity
+                </h2>
+              </div>
+            </div>
+
+            <p class="card-description">
+              A quick comparison of your current activity.
+            </p>
+
+            <div class="chart-container bar-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="barData()"
+                  [options]="barOptions"
+                  type="bar">
+                </canvas>
+              }
+            </div>
+          </article>
+
+        </section>
+
+        <section class="dashboard-card actions-section">
+          <div class="card-heading">
+            <div>
+              <span class="card-eyebrow">
+                SHORTCUTS
+              </span>
+
+              <h2>
+                Quick Actions
+              </h2>
+            </div>
+          </div>
+
           <div class="action-grid">
+
             <a routerLink="/apartments/my" class="action-card">
               <span class="action-icon">🏢</span>
-              <span>My Apartments</span>
+
+              <div>
+                <strong>My Apartments</strong>
+                <small>View your properties</small>
+              </div>
             </a>
+
+            <a routerLink="/bills/my" class="action-card">
+              <span class="action-icon">💳</span>
+
+              <div>
+                <strong>My Bills</strong>
+                <small>View and pay bills</small>
+              </div>
+            </a>
+
             <a routerLink="/complaints/new" class="action-card">
               <span class="action-icon">📝</span>
-              <span>File Complaint</span>
+
+              <div>
+                <strong>File Complaint</strong>
+                <small>Raise a new issue</small>
+              </div>
             </a>
-            <a routerLink="/facilities" class="action-card">
-              <span class="action-icon">🏋️</span>
-              <span>View Facilities</span>
-            </a>
+
             <a routerLink="/announcements" class="action-card">
               <span class="action-icon">📢</span>
-              <span>Announcements</span>
+
+              <div>
+                <strong>Announcements</strong>
+                <small>View society updates</small>
+              </div>
             </a>
+
           </div>
-        </div>
+        </section>
       }
 
       @case ('Resident') {
-        <!-- Resident or Owner-with-active-residency -->
-        <div class="stats-grid">
-          @if (stats().myUnpaidBills > 0) {
-            <a routerLink="/bills/my" class="stat-link">
-              <app-stat-card label="Unpaid Bills" [value]="stats().myUnpaidBills" icon="💰" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Unpaid Bills" [value]="0" icon="💰" />
-            </div>
-          }
 
-          @if (stats().myOpenComplaints > 0) {
-            <a routerLink="/complaints" class="stat-link">
-              <app-stat-card label="Active Complaints" [value]="stats().myOpenComplaints" icon="📝" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Active Complaints" [value]="0" icon="📝" />
-            </div>
-          }
+        <section class="stats-grid">
 
-          @if (stats().myAnnouncements > 0) {
-            <a routerLink="/announcements" class="stat-link">
-              <app-stat-card label="Announcements" [value]="stats().myAnnouncements" icon="📢" />
-            </a>
-          } @else {
-            <div class="stat-link">
-              <app-stat-card label="Announcements" [value]="0" icon="📢" />
+          <a routerLink="/bills/my" class="stat-link">
+            <app-stat-card
+              label="Unpaid Bills"
+              [value]="stats().myUnpaidBills ?? 0"
+              icon="💰" />
+          </a>
+
+          <a routerLink="/complaints" class="stat-link">
+            <app-stat-card
+              label="Active Complaints"
+              [value]="stats().myOpenComplaints ?? 0"
+              icon="📝" />
+          </a>
+
+          <a routerLink="/announcements" class="stat-link">
+            <app-stat-card
+              label="Announcements"
+              [value]="stats().myAnnouncements ?? 0"
+              icon="📢" />
+          </a>
+
+        </section>
+
+        <section class="analytics-grid">
+
+          <!-- Bill Chart -->
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  PAYMENTS
+                </span>
+
+                <h2>
+                  Bill Status
+                </h2>
+              </div>
+
+              <a routerLink="/bills/my">
+                View bills
+              </a>
             </div>
-          }
-        </div>
-        <div class="quick-actions">
-          <h2>Quick Actions</h2>
+
+            <p class="card-description">
+              Your paid, unpaid and overdue maintenance bills.
+            </p>
+
+            <div class="chart-container doughnut-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="doughnutData()"
+                  [options]="doughnutOptions"
+                  type="doughnut">
+                </canvas>
+              }
+            </div>
+          </article>
+
+          <!-- Activity Chart -->
+          <article class="dashboard-card chart-card">
+            <div class="card-heading">
+              <div>
+                <span class="card-eyebrow">
+                  ACTIVITY
+                </span>
+
+                <h2>
+                  My Activity
+                </h2>
+              </div>
+            </div>
+
+            <p class="card-description">
+              Your complaint activity and society updates.
+            </p>
+
+            <div class="chart-container bar-chart">
+              @if (isBrowser) {
+                <canvas
+                  baseChart
+                  [data]="barData()"
+                  [options]="barOptions"
+                  type="bar">
+                </canvas>
+              }
+            </div>
+          </article>
+
+        </section>
+
+        <section class="dashboard-card actions-section">
+          <div class="card-heading">
+            <div>
+              <span class="card-eyebrow">
+                SHORTCUTS
+              </span>
+
+              <h2>
+                Quick Actions
+              </h2>
+            </div>
+          </div>
+
           <div class="action-grid">
-            <a routerLink="/bookings/book" class="action-card">
+
+            <a
+              routerLink="/bookings/book"
+              class="action-card action-card--featured">
+
               <span class="action-icon">📅</span>
-              <span>Book Facility</span>
+
+              <div>
+                <strong>Book Facility</strong>
+                <small>Reserve a society facility</small>
+              </div>
             </a>
+
             <a routerLink="/complaints/new" class="action-card">
               <span class="action-icon">📝</span>
-              <span>File Complaint</span>
+
+              <div>
+                <strong>File Complaint</strong>
+                <small>Report an issue</small>
+              </div>
             </a>
+
             <a routerLink="/visitors/register" class="action-card">
               <span class="action-icon">🚶</span>
-              <span>Register Visitor</span>
+
+              <div>
+                <strong>Register Visitor</strong>
+                <small>Create a visitor entry</small>
+              </div>
             </a>
+
             <a routerLink="/visitors/my" class="action-card">
               <span class="action-icon">📋</span>
-              <span>My Visitors</span>
+
+              <div>
+                <strong>My Visitors</strong>
+                <small>View registered visitors</small>
+              </div>
             </a>
+
             <a routerLink="/bills/my" class="action-card">
               <span class="action-icon">💳</span>
-              <span>Pay Bills</span>
+
+              <div>
+                <strong>Pay Bills</strong>
+                <small>View outstanding bills</small>
+              </div>
             </a>
+
             <a routerLink="/announcements" class="action-card">
               <span class="action-icon">📢</span>
-              <span>Announcements</span>
+
+              <div>
+                <strong>Announcements</strong>
+                <small>Read society updates</small>
+              </div>
             </a>
+
           </div>
-        </div>
+        </section>
       }
 
       @case ('SecurityStaff') {
-        <div class="stats-grid">
-          <a routerLink="/visitors/checkin" class="stat-link">
-            <app-stat-card label="Quick Check-In" value="→" icon="🚶" />
+
+        <section class="stats-grid security-stats">
+
+          <a routerLink="/visitors" class="stat-link">
+            <app-stat-card
+              label="Pending Visitors"
+              [value]="stats().pendingVisitors ?? 0"
+              icon="⏳" />
           </a>
-          <div class="stat-link">
-            <app-stat-card label="Pending Visitors" [value]="stats().pendingVisitors" icon="⏳" />
-          </div>
-        </div>
-        <div class="quick-actions">
-          <h2>Quick Actions</h2>
-          <div class="action-grid">
-            <a routerLink="/visitors/checkin" class="action-card action-card--primary">
-              <span class="action-icon">✅</span>
-              <span>Check In Visitor</span>
+
+          <a routerLink="/visitors/checkin" class="stat-link">
+            <app-stat-card
+              label="Quick Check-In"
+              value="→"
+              icon="🚶" />
+          </a>
+
+        </section>
+
+        <section class="dashboard-card chart-card security-chart">
+          <div class="card-heading">
+            <div>
+              <span class="card-eyebrow">
+                VISITOR CONTROL
+              </span>
+
+              <h2>
+                Pending Visitor Activity
+              </h2>
+            </div>
+
+            <a routerLink="/visitors">
+              View visitors
             </a>
+          </div>
+
+          <p class="card-description">
+            Current number of visitors waiting for entry.
+          </p>
+
+          <div class="chart-container bar-chart">
+            @if (isBrowser) {
+              <canvas
+                baseChart
+                [data]="barData()"
+                [options]="barOptions"
+                type="bar">
+              </canvas>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-card actions-section">
+          <div class="card-heading">
+            <div>
+              <span class="card-eyebrow">
+                SHORTCUTS
+              </span>
+
+              <h2>
+                Quick Actions
+              </h2>
+            </div>
+          </div>
+
+          <div class="action-grid">
+
+            <a
+              routerLink="/visitors/checkin"
+              class="action-card action-card--featured">
+
+              <span class="action-icon">✅</span>
+
+              <div>
+                <strong>Check In Visitor</strong>
+                <small>Process an arriving visitor</small>
+              </div>
+            </a>
+
             <a routerLink="/visitors" class="action-card">
               <span class="action-icon">📋</span>
-              <span>All Visitors</span>
+
+              <div>
+                <strong>All Visitors</strong>
+                <small>View visitor records</small>
+              </div>
             </a>
+
             <a routerLink="/announcements" class="action-card">
               <span class="action-icon">📢</span>
-              <span>Announcements</span>
+
+              <div>
+                <strong>Announcements</strong>
+                <small>Read society updates</small>
+              </div>
             </a>
+
           </div>
-        </div>
+        </section>
       }
     }
   }
