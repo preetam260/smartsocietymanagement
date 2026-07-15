@@ -11,6 +11,7 @@ public class BookingResponseDto{
     public DateTime Date {get; set;}
     public DateTime StartTime {get; set;}
     public DateTime EndTime {get; set;}
+    public int SeatsBooked {get; set;}
     public decimal TotalCost {get; set;}
     public BookingStatus Status {get; set;}
     public DateTime? HoldExpiresAt {get; set;}

@@ -15,4 +15,7 @@ public class CreateBookingDto
 
     [Required]
     public DateTime EndTime {get; set;}
+
+    [Range(1, 5, ErrorMessage = "Seats booked must be between 1 and 5.")]
+    public int SeatsBooked {get; set;} = 1;
 }

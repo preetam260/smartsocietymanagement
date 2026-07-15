@@ -11,7 +11,16 @@ public class FacilityRepository : Repository<Facility>, IFacilityRepository
 
     public async Task<IEnumerable<Facility>> GetActiveFacilitiesAsync()
     {
-        return await _context.Facilities.Where(f => f.IsActive == true).ToListAsync();
+        return await _context.Facilities
+            .Where(f => f.IsActive && !f.IsDeleted)
+            .ToListAsync();
+    }
+
+    public async Task<Facility?> GetByIdForUpdateAsync(Guid id)
+    {
+        return await _context.Facilities
+            .FromSqlInterpolated($"SELECT * FROM \"Facilities\" WHERE \"Id\" = {id} AND \"IsDeleted\" = FALSE FOR UPDATE")
+            .SingleOrDefaultAsync();
     }
 
 }

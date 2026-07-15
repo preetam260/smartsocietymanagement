@@ -9,6 +9,7 @@ public class Booking : BaseEntity
     public DateTime Date {get; set;}
     public DateTime StartTime {get; set;}
     public DateTime EndTime {get; set;}
+    public int SeatsBooked {get; set;} = 1;
     public decimal TotalCost {get; set;}
     public BookingStatus Status {get; set;} = BookingStatus.Pending;
     public DateTime? HoldExpiresAt {get; set;}

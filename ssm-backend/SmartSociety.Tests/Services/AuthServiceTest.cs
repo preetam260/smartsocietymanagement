@@ -16,6 +16,7 @@ public class AuthServiceTest
 {
     private Mock<IUnitOfWork> _mockUow;
     private Mock<IUserRepository> _mockUserRepo;
+    private Mock<IResidentRepository> _mockResidentRepo;
     private Mock<IConfiguration> _mockConfig;
     private Mock<IEmailService> _mockEmail;
     private AuthService _service;
@@ -25,10 +26,12 @@ public class AuthServiceTest
     {
         _mockUow = new Mock<IUnitOfWork>();
         _mockUserRepo = new Mock<IUserRepository>();
+        _mockResidentRepo = new Mock<IResidentRepository>();
         _mockConfig = new Mock<IConfiguration>();
         _mockEmail = new Mock<IEmailService>();
 
         _mockUow.Setup(u => u.Users).Returns(_mockUserRepo.Object);
+        _mockUow.Setup(u => u.Residents).Returns(_mockResidentRepo.Object);
 
         var mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s["Key"]).Returns("SuperSecretTestKey_AtLeast32CharsLong!!");
