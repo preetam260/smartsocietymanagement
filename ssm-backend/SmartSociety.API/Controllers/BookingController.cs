@@ -81,12 +81,15 @@ public class BookingController : ControllerBase
         return Ok(order);
     }
 
-    [HttpPost("{id:guid}/verify-payment")]
+    [HttpPost("{id:guid}/complete-payment")]
     [Authorize(Roles = "Resident")]
-    public async Task<ActionResult<BookingResponseDto>> VerifyPayment(Guid id, [FromBody] VerifyBookingPaymentDto dto)
+    public async Task<ActionResult<BookingResponseDto>> CompleteSimulatedPayment(
+        Guid id,
+        [FromBody] CompleteBookingPaymentDto dto)
     {
-        dto.BookingId = id;
-        var booking = await _bookingService.VerifyPaymentAsync(dto);
+        var booking =
+            await _bookingService.CompleteSimulatedPaymentAsync(id, dto, GetUserId());
+
         return Ok(booking);
     }
 

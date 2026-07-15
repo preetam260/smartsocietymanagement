@@ -4,6 +4,7 @@ using SmartSociety.Application.Interfaces;
 using SmartSociety.Domain.Enums;
 using SmartSociety.Domain.Models;
 using SmartSociety.Repository.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace SmartSociety.Application.Services;
 
@@ -11,11 +12,13 @@ public class BookingService : IBookingService
 {
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<BookingService> _logger;
 
-    public BookingService(IUnitOfWork uow, INotificationService notificationService)
+    public BookingService(IUnitOfWork uow, INotificationService notificationService, ILogger<BookingService> logger)
     {
         _uow = uow;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<BookingResponseDto>> GetAllAsync()
@@ -127,72 +130,214 @@ public class BookingService : IBookingService
 
     public async Task<CreatePaymentOrderResponseDto> CreatePaymentOrderAsync(Guid bookingId, Guid userId)
     {
+        _logger.LogInformation(
+            "UserId {UserId} is creating a simulated payment order for BookingId {BookingId}",
+            userId,
+            bookingId);
+
         var booking = await _uow.Bookings.GetByIdAsync(bookingId)
             ?? throw new NotFoundException("Booking", bookingId);
 
         if (booking.UserId != userId)
-            throw new UnauthorizedException("You are not authorized to pay for this booking.");
+        {
+            _logger.LogWarning(
+                "UserId {UserId} attempted to create a payment order for BookingId {BookingId} owned by UserId {BookingOwnerId}",
+                userId,
+                bookingId,
+                booking.UserId);
+
+            throw new UnauthorizedException(
+                "You are not authorized to pay for this booking.");
+        }
 
         if (booking.Status != BookingStatus.Held)
-            throw new BadRequestException("Only held bookings can be paid for.");
+        {
+            throw new BadRequestException(
+                "Only held bookings can be paid for.");
+        }
 
-        if (booking.HoldExpiresAt != null && booking.HoldExpiresAt < DateTime.UtcNow)
+        if (booking.HoldExpiresAt == null)
+        {
+            _logger.LogWarning(
+                "BookingId {BookingId} is Held but has no HoldExpiresAt value",
+                bookingId);
+
+            throw new BadRequestException(
+                "This booking does not have a valid payment hold.");
+        }
+
+        if (booking.HoldExpiresAt <= DateTime.UtcNow)
         {
             booking.Status = BookingStatus.Expired;
             booking.UpdatedAt = DateTime.UtcNow;
+
             await _uow.Bookings.UpdateAsync(booking);
             await _uow.SaveChangesAsync();
-            throw new BadRequestException("This booking hold has expired. Please create a new booking.");
+
+            _logger.LogInformation(
+                "BookingId {BookingId} expired before payment order creation",
+                bookingId);
+
+            throw new BadRequestException(
+                "This booking hold has expired. Please create a new booking.");
         }
 
-        var dummyOrderId = $"booking_order_{Guid.NewGuid():N}";
+        // If an order has already been created for this held booking,
+        // return the same order instead of generating another one.
+        if (!string.IsNullOrWhiteSpace(booking.TransactionRef) &&
+            booking.TransactionRef.StartsWith(
+                "sim_booking_order_",
+                StringComparison.Ordinal))
+        {
+            _logger.LogInformation(
+                "Returning existing simulated payment OrderId {OrderId} for BookingId {BookingId}",
+                booking.TransactionRef,
+                bookingId);
 
-        booking.TransactionRef = dummyOrderId;
+            return new CreatePaymentOrderResponseDto
+            {
+                OrderId = booking.TransactionRef,
+                Amount = booking.TotalCost,
+                Currency = "INR"
+            };
+        }
+
+        var simulatedOrderId =
+            $"sim_booking_order_{Guid.NewGuid():N}";
+
+        booking.TransactionRef = simulatedOrderId;
         booking.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Bookings.UpdateAsync(booking);
         await _uow.SaveChangesAsync();
 
+        _logger.LogInformation(
+            "Created simulated payment OrderId {OrderId} for BookingId {BookingId}",
+            simulatedOrderId,
+            bookingId);
+
         return new CreatePaymentOrderResponseDto
         {
-            OrderId = dummyOrderId,
+            OrderId = simulatedOrderId,
             Amount = booking.TotalCost,
             Currency = "INR"
         };
     }
-
-    public async Task<BookingResponseDto> VerifyPaymentAsync(VerifyBookingPaymentDto dto)
+    public async Task<BookingResponseDto> CompleteSimulatedPaymentAsync(Guid bookingId, CompleteBookingPaymentDto dto, Guid userId)
     {
-        if (string.IsNullOrWhiteSpace(dto.Signature))
-            throw new BadRequestException("Payment verification failed. Signature is required.");
+        _logger.LogInformation(
+            "UserId {UserId} is attempting to complete simulated payment for BookingId {BookingId} using OrderId {OrderId}",
+            userId,
+            bookingId,
+            dto.OrderId);
 
-        var booking = await _uow.Bookings.GetByIdAsync(dto.BookingId)
-            ?? throw new NotFoundException("Booking", dto.BookingId);
+        var booking = await _uow.Bookings.GetByIdAsync(bookingId)
+            ?? throw new NotFoundException("Booking", bookingId);
+
+        if (booking.UserId != userId)
+        {
+            _logger.LogWarning(
+                "UserId {UserId} attempted to complete payment for BookingId {BookingId} owned by UserId {BookingOwnerId}",
+                userId,
+                bookingId,
+                booking.UserId);
+
+            throw new UnauthorizedException(
+                "You are not authorized to complete payment for this booking.");
+        }
 
         if (booking.Status != BookingStatus.Held)
-            throw new BadRequestException("Only held bookings can be confirmed via payment.");
+        {
+            _logger.LogWarning(
+                "Payment completion rejected for BookingId {BookingId}. Current status is {Status}",
+                bookingId,
+                booking.Status);
 
-        if (booking.HoldExpiresAt != null && booking.HoldExpiresAt < DateTime.UtcNow)
+            throw new BadRequestException(
+                "Only held bookings can be confirmed through payment.");
+        }
+
+        if (booking.HoldExpiresAt == null)
+        {
+            _logger.LogWarning(
+                "BookingId {BookingId} is Held but has no HoldExpiresAt value",
+                bookingId);
+
+            throw new BadRequestException(
+                "This booking does not have a valid payment hold.");
+        }
+
+        if (booking.HoldExpiresAt <= DateTime.UtcNow)
         {
             booking.Status = BookingStatus.Expired;
             booking.UpdatedAt = DateTime.UtcNow;
+
             await _uow.Bookings.UpdateAsync(booking);
             await _uow.SaveChangesAsync();
-            throw new BadRequestException("This booking hold has expired. Please create a new booking.");
+
+            _logger.LogInformation(
+                "BookingId {BookingId} expired before simulated payment could be completed",
+                bookingId);
+
+            throw new BadRequestException(
+                "This booking hold has expired. Please create a new booking.");
         }
 
+        if (string.IsNullOrWhiteSpace(booking.TransactionRef) ||
+            !string.Equals(
+                booking.TransactionRef,
+                dto.OrderId,
+                StringComparison.Ordinal))
+        {
+            _logger.LogWarning(
+                "Payment OrderId mismatch for BookingId {BookingId}. Submitted OrderId {SubmittedOrderId}",
+                bookingId,
+                dto.OrderId);
+
+            throw new BadRequestException(
+                "The payment order does not match this booking.");
+        }
+
+        if (!dto.OrderId.StartsWith(
+                "sim_booking_order_",
+                StringComparison.Ordinal))
+        {
+            _logger.LogWarning(
+                "Invalid simulated booking OrderId format submitted for BookingId {BookingId}",
+                bookingId);
+
+            throw new BadRequestException(
+                "Invalid simulated payment order.");
+        }
+
+        var simulatedPaymentId =
+            $"sim_booking_payment_{Guid.NewGuid():N}";
+
         booking.Status = BookingStatus.Confirmed;
-        booking.TransactionRef = dto.PaymentId;
+        booking.TransactionRef = simulatedPaymentId;
         booking.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Bookings.UpdateAsync(booking);
         await _uow.SaveChangesAsync();
 
-        var facility = await _uow.Facilities.GetByIdAsync(booking.FacilityId);
+        _logger.LogInformation(
+            "Simulated payment completed successfully for BookingId {BookingId}. PaymentReference {PaymentReference}",
+            bookingId,
+            simulatedPaymentId);
+
+        var facility =
+            await _uow.Facilities.GetByIdAsync(
+                booking.FacilityId);
+
         await _notificationService.CreateAsync(
             booking.UserId,
             "Booking Confirmed",
-            $"{facility?.Name ?? "Facility"} booked on {booking.Date:dd MMM yyyy} from {booking.StartTime:hh:mm tt} to {booking.EndTime:hh:mm tt}. Total: ₹{booking.TotalCost}. Ref: {booking.TransactionRef}.");
+            $"{facility?.Name ?? "Facility"} booked on " +
+            $"{booking.Date:dd MMM yyyy} from " +
+            $"{booking.StartTime:hh:mm tt} to " +
+            $"{booking.EndTime:hh:mm tt}. " +
+            $"Total: ₹{booking.TotalCost}. " +
+            $"Ref: {simulatedPaymentId}.");
 
         return await MapToDtoAsync(booking);
     }
@@ -243,19 +388,48 @@ public class BookingService : IBookingService
 
     public async Task ExpireHoldsAsync()
     {
-        var expiredHolds = await _uow.Bookings.GetExpiredHoldsAsync();
+        var now = DateTime.UtcNow;
+
+        _logger.LogDebug("Searching for expired booking holds at {CurrentUtcTime}", now);
+
+        var bookings = await _uow.Bookings.GetAllAsync();
+
+        var expiredHolds = bookings
+            .Where(b =>
+                b.Status == BookingStatus.Held &&
+                b.HoldExpiresAt.HasValue &&
+                b.HoldExpiresAt.Value <= now)
+            .ToList();
+
+        if (expiredHolds.Count == 0)
+        {
+            _logger.LogDebug(
+                "No expired booking holds found.");
+
+            return;
+        }
+
+        _logger.LogInformation("Found {ExpiredHoldCount} expired booking holds.", expiredHolds.Count);
+
         foreach (var booking in expiredHolds)
         {
             booking.Status = BookingStatus.Expired;
-            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedAt = now;
+
             await _uow.Bookings.UpdateAsync(booking);
 
-            await _notificationService.CreateAsync(
-                booking.UserId,
-                "Booking Expired",
-                $"Your booking hold (ID: {booking.Id}) has expired because payment was not completed within 10 minutes.");
+            _logger.LogInformation(
+                "BookingId {BookingId} expired. " +
+                "Hold expired at {HoldExpiresAtUtc}",
+                booking.Id,
+                booking.HoldExpiresAt);
         }
+
         await _uow.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Successfully expired {ExpiredHoldCount} booking holds.",
+            expiredHolds.Count);
     }
     
     private async Task<BookingResponseDto> MapToDtoAsync(Booking b)

@@ -22,16 +22,24 @@ public class PaymentController : ControllerBase
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpPost("create-order/{billId:guid}")]
-    public async Task<ActionResult<CreatePaymentOrderResponseDto>> CreateOrder(Guid billId)
+    public async Task<ActionResult<CreatePaymentOrderResponseDto>> CreateOrder(
+        Guid billId)
     {
-        var order = await _paymentService.CreateOrderAsync(billId, GetUserId());
+        var order = await _paymentService.CreateOrderAsync(
+            billId,
+            GetUserId());
+
         return Ok(order);
     }
 
-    [HttpPost("verify")]
-    public async Task<ActionResult<BillResponseDto>> Verify([FromBody] VerifyPaymentDto dto)
+    [HttpPost("complete")]
+    public async Task<ActionResult<BillResponseDto>> CompleteSimulatedPayment(
+        [FromBody] CompletePaymentDto dto)
     {
-        var result = await _paymentService.VerifyAndCompleteAsync(dto);
+        var result = await _paymentService.CompleteSimulatedPaymentAsync(
+            dto,
+            GetUserId());
+
         return Ok(result);
     }
 }

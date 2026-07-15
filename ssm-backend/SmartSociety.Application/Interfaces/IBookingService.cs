@@ -13,7 +13,7 @@ public interface IBookingService
     Task<IEnumerable<BookingResponseDto>> GetByUserIdAsync(Guid userId);
     Task<BookingResponseDto> CreateAsync(CreateBookingDto dto, Guid userId);
     Task<CreatePaymentOrderResponseDto> CreatePaymentOrderAsync(Guid bookingId, Guid userId);
-    Task<BookingResponseDto> VerifyPaymentAsync(VerifyBookingPaymentDto dto);
+    Task<BookingResponseDto> CompleteSimulatedPaymentAsync(Guid bookingId, CompleteBookingPaymentDto dto, Guid userId);
     Task CancelAsync(Guid id, Guid userId);
     Task CompleteAsync(Guid id);            
     Task ExpireHoldsAsync();            

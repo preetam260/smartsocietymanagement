@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SmartSociety.Application.DTOs;
 
-public class CompleteBookingPaymentDto
+public class CompletePaymentDto
 {
     [Required]
-    public string OrderId {get; set;} = string.Empty;
+    public string OrderId { get; set; } = string.Empty;
 }

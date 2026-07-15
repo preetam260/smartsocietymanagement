@@ -199,37 +199,37 @@ public class ResidentService : IResidentService
                                     .Sum(b => b.Total);
 
             var htmlBody = $@"
-<div style=""font-family:Arial,sans-serif;max-width:600px;margin:auto"">
-<div style=""background:#1e40af;padding:24px 32px"">
-    <h2 style=""color:#fff;margin:0"">SmartSociety</h2>
-    <p style=""color:#bfdbfe;margin:4px 0 0"">Move-Out Confirmation &amp; Bill Statement</p>
-</div>
-<div style=""padding:32px"">
-    <p>Dear <strong>{user.Name}</strong>,</p>
-    <p>Your move-out from apartment <strong>{apartment.Block}-{apartment.Number}</strong>
-    has been recorded on <strong>{resident.MoveOutDate:dd MMM yyyy}</strong>.</p>
-    <p>Please find your complete maintenance bill statement attached as a PDF.</p>
-    <table style=""width:100%;border-collapse:collapse;margin:20px 0"">
-    <tr style=""background:#f3f4f6"">
-        <td style=""padding:10px 14px;font-weight:bold"">Total Bills</td>
-        <td style=""padding:10px 14px"">{billDtos.Count}</td>
-    </tr>
-    <tr>
-        <td style=""padding:10px 14px;font-weight:bold"">Paid Bills</td>
-        <td style=""padding:10px 14px;color:#15803d"">{paidCount}</td>
-    </tr>
-    {(unpaidTotal > 0 ? $@"
-    <tr style=""background:#fef2f2"">
-        <td style=""padding:10px 14px;font-weight:bold;color:#b91c1c"">Outstanding Amount</td>
-        <td style=""padding:10px 14px;color:#b91c1c;font-weight:bold"">₹{unpaidTotal:N2}</td>
-    </tr>" : "")}
-    </table>
-    {(unpaidTotal > 0 ? "<p style=\"color:#b91c1c\"><strong>⚠ Note:</strong> Outstanding bills have been transferred to the apartment owner.</p>" : "<p style=\"color:#15803d\">✅ All bills are cleared. Thank you!</p>")}
-    <p style=""color:#6b7280;font-size:13px"">Your account access has been deactivated. Please contact the administrator if you have any questions.</p>
-    <p>Thank you for being part of SmartSociety.</p>
-    <p>Regards,<br><strong>SmartSociety Management Team</strong></p>
-</div>
-</div>";
+                <div style=""font-family:Arial,sans-serif;max-width:600px;margin:auto"">
+                <div style=""background:#1e40af;padding:24px 32px"">
+                    <h2 style=""color:#fff;margin:0"">SmartSociety</h2>
+                    <p style=""color:#bfdbfe;margin:4px 0 0"">Move-Out Confirmation &amp; Bill Statement</p>
+                </div>
+                <div style=""padding:32px"">
+                    <p>Dear <strong>{user.Name}</strong>,</p>
+                    <p>Your move-out from apartment <strong>{apartment.Block}-{apartment.Number}</strong>
+                    has been recorded on <strong>{resident.MoveOutDate:dd MMM yyyy}</strong>.</p>
+                    <p>Please find your complete maintenance bill statement attached as a PDF.</p>
+                    <table style=""width:100%;border-collapse:collapse;margin:20px 0"">
+                    <tr style=""background:#f3f4f6"">
+                        <td style=""padding:10px 14px;font-weight:bold"">Total Bills</td>
+                        <td style=""padding:10px 14px"">{billDtos.Count}</td>
+                    </tr>
+                    <tr>
+                        <td style=""padding:10px 14px;font-weight:bold"">Paid Bills</td>
+                        <td style=""padding:10px 14px;color:#15803d"">{paidCount}</td>
+                    </tr>
+                    {(unpaidTotal > 0 ? $@"
+                    <tr style=""background:#fef2f2"">
+                        <td style=""padding:10px 14px;font-weight:bold;color:#b91c1c"">Outstanding Amount</td>
+                        <td style=""padding:10px 14px;color:#b91c1c;font-weight:bold"">₹{unpaidTotal:N2}</td>
+                    </tr>" : "")}
+                    </table>
+                    {(unpaidTotal > 0 ? "<p style=\"color:#b91c1c\"><strong>⚠ Note:</strong> Outstanding bills have been transferred to the apartment owner.</p>" : "<p style=\"color:#15803d\">✅ All bills are cleared. Thank you!</p>")}
+                    <p style=""color:#6b7280;font-size:13px"">Your account access has been deactivated. Please contact the administrator if you have any questions.</p>
+                    <p>Thank you for being part of SmartSociety.</p>
+                    <p>Regards,<br><strong>SmartSociety Management Team</strong></p>
+                </div>
+                </div>";
 
             await _emailService.SendAsync(
                 to:              user.Email,

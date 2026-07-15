@@ -3,7 +3,6 @@ using SmartSociety.Application.Interfaces;
 using SmartSociety.Domain.Enums;
 using SmartSociety.Domain.Models;
 using SmartSociety.Repository.Context;
-using SmartSociety.Repository.Interfaces;
 
 namespace SmartSociety.API.BackgroundJobs;
 
@@ -42,7 +41,6 @@ public class BillingBackgroundService : BackgroundService
                 using var scope = _serviceProvider.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<SmartSocietyDbContext>();
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
                 var today = DateTime.UtcNow;
 
@@ -51,7 +49,6 @@ public class BillingBackgroundService : BackgroundService
                     await GenerateMonthlyBillsAsync(context, notificationService, today);
                 }
                 await MarkOverdueBillsAsync(context, notificationService, today);
-                await bookingService.ExpireHoldsAsync();
             }
             catch (Exception ex)
             {
@@ -60,10 +57,7 @@ public class BillingBackgroundService : BackgroundService
         }
     }
 
-    private async Task GenerateMonthlyBillsAsync(
-        SmartSocietyDbContext context,
-        INotificationService notificationService,
-        DateTime today)
+    private async Task GenerateMonthlyBillsAsync(SmartSocietyDbContext context, INotificationService notificationService, DateTime today)
     {
         var billingSettings = _config.GetSection("BillingSettings");
         var defaultBaseAmount = decimal.Parse(billingSettings["DefaultBaseAmount"] ?? "5000");
@@ -128,33 +122,74 @@ public class BillingBackgroundService : BackgroundService
         }
     }
 
-    private async Task MarkOverdueBillsAsync(
-        SmartSocietyDbContext context,
-        INotificationService notificationService,
-        DateTime today)
+    private static int CalculateMonthsOverdue(DateTime dueDate, DateTime currentDate)
     {
-        var billingSettings = _config.GetSection("BillingSettings");
-        var penaltyRate = decimal.Parse(billingSettings["PenaltyRate"] ?? "0.05");
+        if (currentDate <= dueDate)
+        {
+            return 0;
+        }
+
+        var months =
+            (currentDate.Year - dueDate.Year) * 12 +
+            currentDate.Month -
+            dueDate.Month;
+
+        return Math.Max(1, months);
+    }
+    private async Task MarkOverdueBillsAsync(SmartSocietyDbContext context, INotificationService notificationService, DateTime today)
+    {
+        var billingSettings =
+            _config.GetSection("BillingSettings");
+
+        var penaltyRate =
+            decimal.Parse(
+                billingSettings["PenaltyRate"] ?? "0.05");
 
         var overdueBills = await context.Bills
-            .Where(b => (b.Status == BillingStatus.Unpaid || b.Status == BillingStatus.Processing)
-                        && b.DueDate < today)
+            .Where(b =>
+                (
+                    b.Status == BillingStatus.Unpaid ||
+                    b.Status == BillingStatus.Processing ||
+                    b.Status == BillingStatus.Overdue
+                )
+                && b.DueDate < today)
             .ToListAsync();
 
         foreach (var bill in overdueBills)
         {
-            bill.Penalty = Math.Round(bill.BaseAmount * penaltyRate, 2);
+            var wasAlreadyOverdue =
+                bill.Status == BillingStatus.Overdue;
+
+            var monthsOverdue = CalculateMonthsOverdue(
+                    bill.DueDate,
+                    today);
+
+            var newPenalty = Math.Round(
+                    bill.BaseAmount *
+                    penaltyRate *
+                    monthsOverdue,
+                    2);
+
+            var penaltyChanged =
+                bill.Penalty != newPenalty;
+
+            bill.Penalty = newPenalty;
             bill.Status = BillingStatus.Overdue;
             bill.UpdatedAt = DateTime.UtcNow;
 
             _logger.LogInformation(
-                "Bill {BillId} for period {Period} marked overdue. Penalty: ₹{Penalty}",
-                bill.Id, bill.Period, bill.Penalty);
+                "Bill {BillId} for period {Period} is {MonthsOverdue} month(s) overdue. Penalty: ₹{Penalty}", bill.Id, bill.Period, monthsOverdue, bill.Penalty
+                );
 
-            await notificationService.CreateAsync(
-                bill.BilledToUserId,
-                "Bill Overdue",
-                $"Your maintenance bill for {bill.Period} is overdue. A penalty of ₹{bill.Penalty} has been applied.");
+            if (!wasAlreadyOverdue || penaltyChanged)
+            {
+                await notificationService.CreateAsync(
+                    bill.BilledToUserId,
+                    "Bill Overdue",
+                    $"Your maintenance bill for {bill.Period} " +
+                    $"is {monthsOverdue} month(s) overdue. " +
+                    $"The current penalty is ₹{bill.Penalty}.");
+            }
         }
 
         await context.SaveChangesAsync();
