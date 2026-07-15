@@ -10,13 +10,14 @@
       @else if (!pagedResult()?.items?.length) { <app-empty-state message="No bookings for this facility" /> }
       @else {
         <div class="table-wrapper"><table>
-          <thead><tr><th>User</th><th>Date</th><th>Time</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>User</th><th>Date</th><th>Time</th><th>Seats</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             @for (b of pagedResult()!.items; track b.id) {
               <tr>
                 <td>{{ b.userName }}</td>
                 <td>{{ b.date | date:'mediumDate' }}</td>
                 <td>{{ b.startTime }} - {{ b.endTime }}</td>
+                <td>{{ b.seatsBooked }}</td>
                 <td>{{ b.totalCost | currency:'INR' }}</td>
                 <td><app-status-badge [status]="b.status" /></td>
                 <td class="actions">

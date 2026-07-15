@@ -18,7 +18,8 @@ public class ResidentRepository: Repository<Resident>, IResidentRepository
     }
     public async Task<Resident?> GetCurrentByUserIdAsync(Guid userId)
     {
-        return await _context.Residents.FirstOrDefaultAsync(r => r.UserId == userId && r.MoveOutDate == null);
+        return await _context.Residents.FirstOrDefaultAsync(
+            r => r.UserId == userId && r.MoveOutDate == null && !r.IsDeleted);
     }
     public async Task<IEnumerable<Resident>> GetAllCurrentAsync()
     {

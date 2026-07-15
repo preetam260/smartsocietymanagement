@@ -15,7 +15,11 @@ function timeRangeValidator(control: AbstractControl): ValidationErrors | null {
   if (!date || !start || !end) return null;
   const startDt = new Date(`${date}T${start}:00`);
   const endDt = new Date(`${date}T${end}:00`);
-  return endDt > startDt ? null : { timeRange: 'End time must be after start time.' };
+  if (endDt <= startDt) return { timeRange: 'End time must be after start time.' };
+  const isBoundary = (time: string) => ['00', '30'].includes(time.split(':')[1]);
+  return isBoundary(start) && isBoundary(end)
+    ? null
+    : { slotBoundary: 'Choose a time ending in :00 or :30.' };
 }
 
 @Component({
@@ -37,10 +41,17 @@ export class BookFacilityComponent implements OnInit {
     date: new FormControl('', [Validators.required]),
     startTime: new FormControl('', [Validators.required]),
     endTime: new FormControl('', [Validators.required]),
+    seatsBooked: new FormControl(1, [Validators.required, Validators.min(1), Validators.max(5)]),
   }, { validators: timeRangeValidator });
 
   get timeRangeError() {
     return this.form.errors?.['timeRange'] &&
+      this.form.get('startTime')?.touched &&
+      this.form.get('endTime')?.touched;
+  }
+
+  get slotBoundaryError() {
+    return this.form.errors?.['slotBoundary'] &&
       this.form.get('startTime')?.touched &&
       this.form.get('endTime')?.touched;
   }
@@ -65,6 +76,7 @@ export class BookFacilityComponent implements OnInit {
       date: date,          // ← send the date field so backend stores it correctly
       startTime: startISO,
       endTime: endISO,
+      seatsBooked: Number(this.form.value.seatsBooked),
     }).subscribe({
       next: () => { this.toast.success('Booking created!'); this.router.navigate(['/bookings']); },
       error: () => this.loading.set(false)

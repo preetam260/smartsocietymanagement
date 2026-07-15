@@ -68,17 +68,80 @@ public class BookingService : IBookingService
         return await MapToDtoListAsync(bookings);
     }
 
+    public async Task<bool> HasActiveResidencyAsync(Guid userId)
+    {
+        return await _uow.Residents.GetCurrentByUserIdAsync(userId) != null;
+    }
+
+    public async Task<BookingCalendarResponseDto> GetCalendarAsync(
+        Guid facilityId,
+        DateTime from,
+        DateTime to)
+    {
+        if (facilityId == Guid.Empty)
+            throw new BadRequestException("A facility is required.");
+
+        if (from >= to)
+            throw new BadRequestException("Calendar start time must be before end time.");
+
+        if (!IsThirtyMinuteBoundary(from) || !IsThirtyMinuteBoundary(to))
+            throw new BadRequestException("Calendar range must use 30-minute boundaries.");
+
+        if (to - from > TimeSpan.FromDays(42))
+            throw new BadRequestException("Calendar range cannot exceed 42 days.");
+
+        var facility = await _uow.Facilities.GetByIdAsync(facilityId)
+            ?? throw new NotFoundException("Facility", facilityId);
+
+        if (!facility.IsActive || facility.IsDeleted)
+            throw new BadRequestException("This facility is not currently available for booking.");
+
+        var bookings = (await _uow.Bookings.GetByDateRangeAsync(facilityId, from, to)).ToList();
+        var slots = new List<BookingAvailabilitySlotDto>();
+
+        for (var slotStart = from; slotStart < to; slotStart = slotStart.AddMinutes(30))
+        {
+            var slotEnd = slotStart.AddMinutes(30);
+            var slotBookings = bookings
+                .Where(b => b.StartTime < slotEnd && b.EndTime > slotStart)
+                .ToList();
+            var confirmedSeats = slotBookings
+                .Where(b => b.Status == BookingStatus.Confirmed)
+                .Sum(b => Math.Max(1, b.SeatsBooked));
+            var heldSeats = slotBookings
+                .Where(b => b.Status == BookingStatus.Held)
+                .Sum(b => Math.Max(1, b.SeatsBooked));
+            var reservedSeats = slotBookings.Sum(b => Math.Max(1, b.SeatsBooked));
+            var availableSeats = Math.Max(0, facility.Capacity - reservedSeats);
+
+            slots.Add(new BookingAvailabilitySlotDto
+            {
+                StartTime = slotStart,
+                EndTime = slotEnd,
+                ConfirmedSeats = confirmedSeats,
+                HeldSeats = heldSeats,
+                ReservedSeats = reservedSeats,
+                AvailableSeats = availableSeats,
+                AvailabilityLevel = GetAvailabilityLevel(availableSeats)
+            });
+        }
+
+        return new BookingCalendarResponseDto
+        {
+            FacilityId = facility.Id,
+            FacilityName = facility.Name,
+            Capacity = facility.Capacity,
+            From = from,
+            To = to,
+            Slots = slots
+        };
+    }
+
     public async Task<BookingResponseDto> CreateAsync(CreateBookingDto dto, Guid userId)
     {
-        var facility = await _uow.Facilities.GetByIdAsync(dto.FacilityId)
-            ?? throw new NotFoundException("Facility", dto.FacilityId);
-
         var resident = await _uow.Residents.GetCurrentByUserIdAsync(userId);
         if (resident == null)
             throw new UnauthorizedException("You must be an active resident to book facilities.");
-
-        if (!facility.IsActive)
-            throw new BadRequestException("This facility is not currently available for booking.");
 
         if (dto.StartTime >= dto.EndTime)
             throw new BadRequestException("Start time must be before end time.");
@@ -86,17 +149,34 @@ public class BookingService : IBookingService
         if (dto.StartTime <= DateTime.UtcNow)
             throw new BadRequestException("Booking must be scheduled for a future time.");
 
+        if (!IsThirtyMinuteBoundary(dto.StartTime) || !IsThirtyMinuteBoundary(dto.EndTime))
+            throw new BadRequestException("Bookings must start and end on a 30-minute boundary.");
 
+        if (dto.SeatsBooked is < 1 or > 5)
+            throw new BadRequestException("Seats booked must be between 1 and 5.");
 
         await using var transaction = await _uow.BeginTransactionAsync();
         try
         {
-            var overlapping = await _uow.Bookings.GetByDateRangeAsync(dto.FacilityId, dto.StartTime, dto.EndTime);
-            if (overlapping.Any())
-                throw new ConflictException("This facility is already booked for the selected time slot.");
+            var facility = await _uow.Facilities.GetByIdForUpdateAsync(dto.FacilityId)
+                ?? throw new NotFoundException("Facility", dto.FacilityId);
+
+            if (!facility.IsActive)
+                throw new BadRequestException("This facility is not currently available for booking.");
+
+            if (dto.SeatsBooked > facility.Capacity)
+                throw new BadRequestException(
+                    $"This facility can accommodate at most {facility.Capacity} seat(s).");
+
+            var overlapping = (await _uow.Bookings.GetByDateRangeAsync(
+                dto.FacilityId,
+                dto.StartTime,
+                dto.EndTime)).ToList();
+
+            EnsureCapacityAvailable(facility, overlapping, dto);
 
             var hours = (decimal)(dto.EndTime - dto.StartTime).TotalHours;
-            var totalCost = Math.Round(facility.HourlyRate * hours, 2);
+            var totalCost = Math.Round(facility.HourlyRate * hours * dto.SeatsBooked, 2);
 
             var booking = new Booking
             {
@@ -105,6 +185,7 @@ public class BookingService : IBookingService
                 Date = dto.StartTime.Date,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
+                SeatsBooked = dto.SeatsBooked,
                 TotalCost = totalCost,
                 Status = BookingStatus.Held,
                 HoldExpiresAt = DateTime.UtcNow.AddMinutes(10)
@@ -117,7 +198,9 @@ public class BookingService : IBookingService
             await _notificationService.CreateAsync(
                 userId,
                 "Booking Held",
-                $"{facility.Name} slot held on {dto.Date:dd MMM yyyy} from {dto.StartTime:hh:mm tt} to {dto.EndTime:hh:mm tt}. Total: ₹{totalCost}. Complete payment within 10 minutes to confirm.");
+                $"{facility.Name} held for {dto.SeatsBooked} seat(s) on {dto.Date:dd MMM yyyy} " +
+                $"from {dto.StartTime:hh:mm tt} to {dto.EndTime:hh:mm tt}. " +
+                $"Total: ₹{totalCost}. Complete payment within 10 minutes to confirm.");
 
             return await MapToDtoAsync(booking);
         }
@@ -125,6 +208,44 @@ public class BookingService : IBookingService
         {
             await transaction.RollbackAsync();
             throw;
+        }
+    }
+
+    private static bool IsThirtyMinuteBoundary(DateTime value)
+    {
+        return value.Minute % 30 == 0 &&
+               value.Ticks % TimeSpan.TicksPerMinute == 0;
+    }
+
+    private static string GetAvailabilityLevel(int availableSeats)
+    {
+        if (availableSeats == 0)
+            return "Full";
+
+        return availableSeats <= 5 ? "FillingFast" : "Available";
+    }
+
+    private static void EnsureCapacityAvailable(
+        Facility facility,
+        IReadOnlyCollection<Booking> overlapping,
+        CreateBookingDto dto)
+    {
+        for (var slotStart = dto.StartTime;
+             slotStart < dto.EndTime;
+             slotStart = slotStart.AddMinutes(30))
+        {
+            var slotEnd = slotStart.AddMinutes(30);
+            var reservedSeats = overlapping
+                .Where(b => b.StartTime < slotEnd && b.EndTime > slotStart)
+                .Sum(b => Math.Max(1, b.SeatsBooked));
+            var availableSeats = Math.Max(0, facility.Capacity - reservedSeats);
+
+            if (dto.SeatsBooked > availableSeats)
+            {
+                throw new ConflictException(
+                    $"Only {availableSeats} seat(s) are available from " +
+                    $"{slotStart:dd MMM yyyy, hh:mm tt} to {slotEnd:hh:mm tt}.");
+            }
         }
     }
 
@@ -446,6 +567,7 @@ public class BookingService : IBookingService
             Date = b.Date,
             StartTime = b.StartTime,
             EndTime = b.EndTime,
+            SeatsBooked = b.SeatsBooked,
             TotalCost = b.TotalCost,
             Status = b.Status,
             HoldExpiresAt = b.HoldExpiresAt,

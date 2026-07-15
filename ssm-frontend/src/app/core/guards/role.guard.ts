@@ -9,8 +9,10 @@ export const roleGuard: CanActivateFn = (route) => {
 
   const allowedRoles: UserRole[] = route.data?.['roles'] ?? [];
   const userRole = auth.role();
+  const effectiveRole = auth.effectiveRole();
 
-  if (userRole && allowedRoles.includes(userRole)) {
+  if ((userRole && allowedRoles.includes(userRole)) ||
+      (effectiveRole && allowedRoles.includes(effectiveRole))) {
     return true;
   }
   return router.createUrlTree(['/dashboard']);

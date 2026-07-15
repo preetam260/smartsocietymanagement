@@ -75,6 +75,13 @@ public class SmartSocietyDbContext : DbContext
             .WithMany(x => x.Bookings)
             .HasForeignKey(x => x.FacilityId);
 
+        modelBuilder.Entity<Booking>()
+            .Property(x => x.SeatsBooked)
+            .HasDefaultValue(1);
+
+        modelBuilder.Entity<Booking>()
+            .HasIndex(x => new { x.FacilityId, x.StartTime, x.EndTime });
+
         modelBuilder.Entity<Bill>()
             .HasOne(x => x.Apartment)
             .WithMany(x => x.Bills)

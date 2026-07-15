@@ -1,6 +1,7 @@
 <div class="page-header">
   <h1>All Bookings</h1>
   <div class="flex gap-sm">
+    <a routerLink="/admin/booking-calendar" class="btn btn-primary">Availability Calendar</a>
     <button class="btn btn-warning" (click)="showExpireHolds.set(true)">Expire Holds</button>
     <a routerLink="/facilities" class="btn btn-outline">← Facilities</a>
   </div>
@@ -26,7 +27,7 @@
   @else {
     <div class="table-wrapper"><table>
       <thead><tr>
-        <th>Resident</th><th>Facility</th><th>Date</th><th>Time</th><th>Cost</th><th>Status</th><th>Actions</th>
+        <th>Resident</th><th>Facility</th><th>Date</th><th>Time</th><th>Seats</th><th>Cost</th><th>Status</th><th>Actions</th>
       </tr></thead>
       <tbody>
         @for (b of paginated(); track b.id) {
@@ -35,6 +36,7 @@
             <td>{{ b.facilityName }}</td>
             <td>{{ b.date | date:'mediumDate' }}</td>
             <td>{{ b.startTime | date:'shortTime' }} – {{ b.endTime | date:'shortTime' }}</td>
+            <td>{{ b.seatsBooked }}</td>
             <td>{{ b.totalCost | currency:'INR' }}</td>
             <td><app-status-badge [status]="b.status" /></td>
             <td class="actions">

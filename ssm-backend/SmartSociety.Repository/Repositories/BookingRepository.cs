@@ -29,7 +29,8 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
     public async Task<IEnumerable<Booking>> GetByDateRangeAsync(Guid facilityId, DateTime start, DateTime end)
     {
         return await _context.Bookings
-                    .Where(b => b.FacilityId == facilityId
+                    .Where(b => !b.IsDeleted
+                            && b.FacilityId == facilityId
                             && (b.Status == BookingStatus.Pending
                             || b.Status == BookingStatus.Confirmed
                             || (b.Status == BookingStatus.Held 
@@ -43,7 +44,8 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
     public async Task<IEnumerable<Booking>> GetExpiredHoldsAsync()
     {
         return await _context.Bookings
-                    .Where(b => b.Status == BookingStatus.Held
+                    .Where(b => !b.IsDeleted
+                            && b.Status == BookingStatus.Held
                             && b.HoldExpiresAt != null
                             && b.HoldExpiresAt <= DateTime.UtcNow)
                     .ToListAsync();

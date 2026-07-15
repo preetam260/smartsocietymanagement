@@ -11,6 +11,8 @@ public interface IBookingService
     Task<PagedResult<BookingResponseDto>> GetByFacilityIdPagedAsync(Guid facilityId, PaginationQuery query);
     Task<IEnumerable<BookingResponseDto>> GetMyBookingsAsync(Guid userId);
     Task<IEnumerable<BookingResponseDto>> GetByUserIdAsync(Guid userId);
+    Task<bool> HasActiveResidencyAsync(Guid userId);
+    Task<BookingCalendarResponseDto> GetCalendarAsync(Guid facilityId, DateTime from, DateTime to);
     Task<BookingResponseDto> CreateAsync(CreateBookingDto dto, Guid userId);
     Task<CreatePaymentOrderResponseDto> CreatePaymentOrderAsync(Guid bookingId, Guid userId);
     Task<BookingResponseDto> CompleteSimulatedPaymentAsync(Guid bookingId, CompleteBookingPaymentDto dto, Guid userId);

@@ -30,7 +30,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin,Resident")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
     public async Task<ActionResult<BookingResponseDto>> GetById(Guid id)
     {
         var booking = await _bookingService.GetByIdAsync(id);
@@ -49,7 +49,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet("my")]
-    [Authorize(Roles = "Resident")]
+    [Authorize(Roles = "Resident,Owner")]
     public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetMyBookings()
     {
         var bookings = await _bookingService.GetMyBookingsAsync(GetUserId());
@@ -64,8 +64,23 @@ public class BookingController : ControllerBase
         return Ok(bookings);
     }
 
+    [HttpGet("calendar")]
+    [Authorize(Roles = "Admin,Resident,Owner")]
+    public async Task<ActionResult<BookingCalendarResponseDto>> GetCalendar(
+        [FromQuery] Guid facilityId,
+        [FromQuery] DateTime from,
+        [FromQuery] DateTime to)
+    {
+        if (!User.IsInRole("Admin") &&
+            !await _bookingService.HasActiveResidencyAsync(GetUserId()))
+            return Forbid();
+
+        var calendar = await _bookingService.GetCalendarAsync(facilityId, from, to);
+        return Ok(calendar);
+    }
+
     [HttpPost]
-    [Authorize(Roles = "Resident")]
+    [Authorize(Roles = "Resident,Owner")]
 
     public async Task<ActionResult<BookingResponseDto>> Create([FromBody] CreateBookingDto dto)
     {
@@ -74,7 +89,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("{id:guid}/create-order")]
-    [Authorize(Roles = "Resident")]
+    [Authorize(Roles = "Resident,Owner")]
     public async Task<ActionResult<CreatePaymentOrderResponseDto>> CreatePaymentOrder(Guid id)
     {
         var order = await _bookingService.CreatePaymentOrderAsync(id, GetUserId());
@@ -82,7 +97,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("{id:guid}/complete-payment")]
-    [Authorize(Roles = "Resident")]
+    [Authorize(Roles = "Resident,Owner")]
     public async Task<ActionResult<BookingResponseDto>> CompleteSimulatedPayment(
         Guid id,
         [FromBody] CompleteBookingPaymentDto dto)
@@ -94,7 +109,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/cancel")]
-    [Authorize(Roles = "Resident")]
+    [Authorize(Roles = "Resident,Owner")]
     public async Task<IActionResult> Cancel(Guid id)
     {
         await _bookingService.CancelAsync(id, GetUserId());
