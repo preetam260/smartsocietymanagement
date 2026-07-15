@@ -1,0 +1,225 @@
+<div class="calendar-page">
+  <header class="calendar-heading">
+    <div>
+      <span class="eyebrow">Common areas</span>
+      <h1>Facility availability</h1>
+      <p>See live seat availability in 30-minute intervals before you reserve.</p>
+    </div>
+    <div class="heading-actions">
+      @if (isAdmin()) {
+        <a routerLink="/admin/bookings" class="btn btn-outline">All bookings</a>
+      } @else {
+        <a routerLink="/bookings/my" class="btn btn-outline">My bookings</a>
+      }
+    </div>
+  </header>
+
+  <section class="calendar-toolbar" aria-label="Calendar controls">
+    <label class="facility-control">
+      <span>Facility</span>
+      <select class="form-control" [value]="facilityId()" (change)="onFacilityChange($event)">
+        @for (facility of facilities(); track facility.id) {
+          <option [value]="facility.id">
+            {{ facility.name }} · {{ facility.capacity }} seats
+          </option>
+        }
+      </select>
+    </label>
+
+    <div class="view-switcher" aria-label="Calendar view">
+      <button type="button" [class.active]="view() === 'day'" (click)="setView('day')">Day</button>
+      <button type="button" [class.active]="view() === 'week'" (click)="setView('week')">Week</button>
+      <button type="button" [class.active]="view() === 'month'" (click)="setView('month')">Month</button>
+    </div>
+
+    <div class="date-navigation">
+      <button type="button" class="nav-button" (click)="move(-1)" aria-label="Previous date">←</button>
+      <button type="button" class="today-button" (click)="goToToday()">Today</button>
+      <button type="button" class="nav-button" (click)="move(1)" aria-label="Next date">→</button>
+    </div>
+  </section>
+
+  <section class="calendar-context">
+    <div>
+      <span class="context-label">Showing</span>
+      <h2>{{ rangeLabel() }}</h2>
+    </div>
+    @if (selectedFacility(); as facility) {
+      <div class="facility-facts">
+        <span><strong>{{ facility.capacity }}</strong> total seats</span>
+        <span><strong>{{ facility.hourlyRate | currency:'INR':'symbol':'1.0-2' }}</strong> per seat/hour</span>
+      </div>
+    }
+    <div class="availability-legend" aria-label="Availability legend">
+      <span><i class="legend-dot available"></i>Available</span>
+      <span><i class="legend-dot filling"></i>5 or fewer left</span>
+      <span><i class="legend-dot full"></i>Full</span>
+      <span><i class="legend-dot held"></i>Includes holds</span>
+    </div>
+  </section>
+
+  @if (view() !== 'month') {
+    <div class="time-filter" aria-label="Time filter">
+      <span>Time</span>
+      <button type="button" [class.active]="dayPart() === 'all'" (click)="setDayPart('all')">All day</button>
+      <button type="button" [class.active]="dayPart() === 'morning'" (click)="setDayPart('morning')">Morning</button>
+      <button type="button" [class.active]="dayPart() === 'afternoon'" (click)="setDayPart('afternoon')">Afternoon</button>
+      <button type="button" [class.active]="dayPart() === 'evening'" (click)="setDayPart('evening')">Evening</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="calendar-loading"><app-loading-spinner /></div>
+  } @else if (!facilities().length) {
+    <div class="calendar-message">No active facilities are available.</div>
+  } @else if (loadError()) {
+    <div class="calendar-message error-message">
+      <span>{{ loadError() }}</span>
+      <button type="button" class="btn btn-outline btn-sm" (click)="loadCalendar()">Try again</button>
+    </div>
+  } @else {
+    @if (view() === 'day') {
+      <section class="day-timetable" aria-label="Daily facility availability">
+        <div class="timetable-title-row">
+          <div>
+            <strong>30-minute availability</strong>
+            <span>{{ selectedFacility()?.name }}</span>
+          </div>
+          @if (canBook()) {
+            <span class="selection-hint">Select consecutive slots to reserve</span>
+          }
+        </div>
+
+        <div class="slot-list">
+          @for (slot of daySlots(); track slot.key) {
+            <button
+              type="button"
+              class="slot-row"
+              [class.selected]="isSelected(slot)"
+              [class.past]="isPast(slot)"
+              [class]="availabilityClass(slot.availabilityLevel)"
+              [disabled]="!canBook() || !isSlotSelectable(slot)"
+              (click)="toggleSlot(slot)">
+              <span class="slot-time">
+                <strong>{{ slot.start | date:'shortTime' }}</strong>
+                <small>{{ slot.end | date:'shortTime' }}</small>
+              </span>
+              <span class="capacity-track" aria-hidden="true">
+                <i [style.width.%]="calendar()!.capacity ? (slot.reservedSeats / calendar()!.capacity) * 100 : 0"></i>
+              </span>
+              <span class="seat-count">
+                <strong>{{ slot.availableSeats }}</strong>
+                <small>of {{ calendar()!.capacity }} left</small>
+              </span>
+              <span class="slot-state">
+                @if (slot.heldSeats > 0) {
+                  <small class="held-note">{{ slot.heldSeats }} held</small>
+                }
+                <strong>{{ slot.availabilityLevel === 'FillingFast' ? 'Filling fast' : slot.availabilityLevel }}</strong>
+              </span>
+            </button>
+          }
+        </div>
+      </section>
+    }
+
+    @if (view() === 'week') {
+      <section class="week-calendar" aria-label="Weekly facility availability">
+        <div class="week-grid" [style.--day-count]="7">
+          <div class="week-corner">Time</div>
+          @for (day of weekDays(); track day.getTime()) {
+            <button type="button" class="week-day-heading" [class.today]="isToday(day)" (click)="openDay(day)">
+              <span>{{ day | date:'EEE' }}</span>
+              <strong>{{ day | date:'d' }}</strong>
+            </button>
+          }
+
+          @for (slotIndex of visibleSlotIndexes(); track slotIndex) {
+            <div class="week-time">{{ timeLabel(slotIndex) }}</div>
+            @for (day of weekDays(); track day.getTime()) {
+              @if (slotFor(day, slotIndex); as slot) {
+                <button
+                  type="button"
+                  class="week-slot"
+                  [class]="availabilityClass(slot.availabilityLevel)"
+                  (click)="openDay(day)"
+                  [attr.aria-label]="(day | date:'fullDate') + ', ' + timeLabel(slotIndex) + ', ' + slot.availableSeats + ' seats available'">
+                  <strong>{{ slot.availableSeats }}</strong>
+                  <span>left</span>
+                  @if (slot.heldSeats > 0) { <i title="Includes held seats"></i> }
+                </button>
+              } @else {
+                <span class="week-slot unavailable">—</span>
+              }
+            }
+          }
+        </div>
+      </section>
+    }
+
+    @if (view() === 'month') {
+      <section class="month-calendar" aria-label="Monthly facility availability">
+        <div class="month-weekdays" aria-hidden="true">
+          @for (name of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; track name) {
+            <span>{{ name }}</span>
+          }
+        </div>
+        <div class="month-grid">
+          @for (day of monthDays(); track day.getTime()) {
+            @let summary = monthSummary(day);
+            <button
+              type="button"
+              class="month-day"
+              [class.outside]="!isInAnchorMonth(day)"
+              [class.today]="isToday(day)"
+              [class]="availabilityClass(summary.level)"
+              (click)="openDay(day)">
+              <span class="day-number">{{ day | date:'d' }}</span>
+              <span class="month-capacity">
+                <strong>{{ summary.minAvailable }}</strong>
+                <small>minimum seats left</small>
+              </span>
+              <span class="month-detail">
+                Peak {{ summary.peakReserved }}/{{ calendar()!.capacity }}
+                @if (summary.fullSlots > 0) { · {{ summary.fullSlots }} full slots }
+              </span>
+            </button>
+          }
+        </div>
+      </section>
+    }
+  }
+
+  @if (canBook() && selectedSlots().length) {
+    <aside class="booking-tray" aria-label="Selected booking">
+      <div class="tray-summary">
+        <span class="eyebrow">Your selection</span>
+        <strong>
+          {{ selectedSlots()[0].start | date:'shortTime' }}–{{ selectedSlots()[selectedSlots().length - 1].end | date:'shortTime' }}
+        </strong>
+        <small>{{ selectedSlots().length }} slot{{ selectedSlots().length === 1 ? '' : 's' }} · {{ selectedDuration() }} hour{{ selectedDuration() === 1 ? '' : 's' }}</small>
+      </div>
+
+      <div class="seat-stepper">
+        <span>Seats</span>
+        <div>
+          <button type="button" (click)="changeSeats(-1)" [disabled]="seats() === 1">−</button>
+          <input type="number" min="1" max="5" [value]="seats()" (input)="onSeatsInput($event)" aria-label="Seats to reserve">
+          <button type="button" (click)="changeSeats(1)" [disabled]="seats() === 5">+</button>
+        </div>
+      </div>
+
+      <div class="tray-price">
+        <span>Estimated total</span>
+        <strong>{{ estimatedCost() | currency:'INR':'symbol':'1.0-2' }}</strong>
+      </div>
+
+      <div class="tray-actions">
+        <button type="button" class="btn btn-outline" (click)="clearSelection()">Clear</button>
+        <button type="button" class="btn btn-primary" [disabled]="booking()" (click)="bookSelectedSlots()">
+          {{ booking() ? 'Holding seats…' : 'Hold and continue to payment' }}
+        </button>
+      </div>
+    </aside>
+  }
+</div>

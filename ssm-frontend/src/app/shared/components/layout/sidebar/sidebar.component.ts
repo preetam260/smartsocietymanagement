@@ -52,6 +52,9 @@ export class SidebarComponent {
       else if (link.path === '/apartments' && (role === 'Owner' || role == 'Resident')){
         path = '/apartments/my';
       }
+      else if (link.path === '/bookings' && role === 'Admin') {
+        path = '/admin/bookings';
+      }
       return { ...link, path }; 
     })
   });

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { BookingResponse, CreateBookingDto, CreatePaymentOrderResponse } from './booking.model';
+import { BookingCalendarResponse, BookingResponse, CreateBookingDto, CreatePaymentOrderResponse } from './booking.model';
 import { PagedResult, PaginationQuery } from '../../core/models/paged-result.model';
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +37,14 @@ export class BookingService {
 
   getByUser(userId: string) {
     return this.http.get<BookingResponse[]>(`${this.base}/user/${userId}`);
+  }
+
+  getCalendar(facilityId: string, from: string, to: string) {
+    const params = new HttpParams()
+      .set('facilityId', facilityId)
+      .set('from', from)
+      .set('to', to);
+    return this.http.get<BookingCalendarResponse>(`${this.base}/calendar`, { params });
   }
 
   cancel(id: string) {

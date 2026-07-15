@@ -86,6 +86,37 @@ body {
   line-height: 1.6;
 }
 
+@media (max-width: 1000px) {
+  .calendar-toolbar, .calendar-context { grid-template-columns: 1fr auto !important; }
+  .date-navigation, .availability-legend { grid-column: 1 / -1; }
+  .booking-tray { left: 1rem !important; right: 1rem !important; grid-template-columns: 1fr auto auto !important; }
+  .booking-tray .tray-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+
+@media (max-width: 700px) {
+  .calendar-heading { align-items: flex-start !important; flex-direction: column; }
+  .calendar-toolbar, .calendar-context { grid-template-columns: 1fr !important; }
+  .view-switcher button { flex: 1; }
+  .date-navigation, .availability-legend { grid-column: auto; }
+  .date-navigation, .facility-facts { justify-content: space-between; }
+  .availability-legend { grid-template-columns: 1fr 1fr !important; }
+  .time-filter { width: 100% !important; overflow: auto; }
+  .slot-row { grid-template-columns: 85px 1fr 80px !important; gap: .65rem !important; }
+  .slot-state, .month-detail { display: none !important; }
+  .month-weekdays span { padding: .4rem .1rem !important; }
+  .month-day { min-height: 88px !important; padding: .4rem !important; }
+  .month-capacity strong { font-size: 1rem !important; }
+  .booking-tray { grid-template-columns: 1fr auto !important; gap: .75rem !important; }
+  .booking-tray .tray-price { text-align: right; }
+  .booking-tray .seat-stepper { grid-row: 2; }
+  .booking-tray .tray-actions { grid-column: 1 / -1; }
+  .booking-tray .tray-actions .btn-primary { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot-row { transition: none !important; }
+}
+
 button,
 input,
 select,

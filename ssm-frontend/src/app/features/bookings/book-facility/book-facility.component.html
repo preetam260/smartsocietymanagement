@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Book a Facility</h1>
-  <a routerLink="/bookings" class="btn btn-outline">← My Bookings</a>
+  <a routerLink="/bookings/my" class="btn btn-outline">← My Bookings</a>
 </div>
 <div class="card"><div class="card-body">
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -26,21 +26,31 @@
       </div>
       <div class="form-group">
         <label for="startTime">Start Time</label>
-        <input id="startTime" type="time" class="form-control" formControlName="startTime">
+        <input id="startTime" type="time" step="1800" class="form-control" formControlName="startTime">
         @if (form.controls.startTime.invalid && form.controls.startTime.touched) {
           <div class="form-error">Start time is required</div>
         }
       </div>
       <div class="form-group">
         <label for="endTime">End Time</label>
-        <input id="endTime" type="time" class="form-control" formControlName="endTime">
+        <input id="endTime" type="time" step="1800" class="form-control" formControlName="endTime">
         @if (form.controls.endTime.invalid && form.controls.endTime.touched) {
           <div class="form-error">End time is required</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="seatsBooked">Seats</label>
+        <input id="seatsBooked" type="number" min="1" max="5" class="form-control" formControlName="seatsBooked">
+        @if (form.controls.seatsBooked.invalid && form.controls.seatsBooked.touched) {
+          <div class="form-error">Choose between 1 and 5 seats</div>
         }
       </div>
     </div>
     @if (timeRangeError) {
       <div class="form-error mt-sm">End time must be after start time.</div>
+    }
+    @if (slotBoundaryError) {
+      <div class="form-error mt-sm">Choose times ending in :00 or :30.</div>
     }
     <div class="mt-lg">
       <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">

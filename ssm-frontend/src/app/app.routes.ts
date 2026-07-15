@@ -85,6 +85,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/bookings/all-bookings/all-bookings.component').then(m => m.AllBookingsComponent)
       },
       {
+        path: 'admin/booking-calendar',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadComponent: () => import('./features/bookings/booking-calendar/booking-calendar.component').then(m => m.BookingCalendarComponent)
+      },
+      {
         path: 'visitors',
         canActivate: [roleGuard],
         data: { roles: ['Admin', 'Resident', 'SecurityStaff'] },
