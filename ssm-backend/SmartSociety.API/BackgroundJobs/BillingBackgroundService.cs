@@ -27,51 +27,31 @@ public class BillingBackgroundService : BackgroundService
         {
             try
             {
-                using var scope =
-                    _serviceProvider.CreateScope();
-
-                var context =
-                    scope.ServiceProvider
-                        .GetRequiredService<SmartSocietyDbContext>();
-
-                var notificationService =
-                    scope.ServiceProvider
-                        .GetRequiredService<INotificationService>();
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<SmartSocietyDbContext>();
+                var notificationService =scope.ServiceProvider.GetRequiredService<INotificationService>();
 
                 var today = DateTime.UtcNow;
-
-                _logger.LogInformation(
-                    "BillingBackgroundService running billing checks at {RunTime}.",
-                    today);
+                _logger.LogInformation("BillingBackgroundService running billing checks at {RunTime}.", today);
 
                 if (today.Day == 1)
                 {
-                    await GenerateMonthlyBillsAsync(
-                        context,
-                        notificationService,
-                        today);
+                    await GenerateMonthlyBillsAsync(context, notificationService, today);
                 }
 
-                await MarkOverdueBillsAsync(
-                    context,
-                    notificationService,
-                    today);
+                await MarkOverdueBillsAsync(context, notificationService, today);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "BillingBackgroundService encountered an error.");
+                _logger.LogError(ex, "BillingBackgroundService encountered an error.");
             }
 
             var now = DateTime.UtcNow;
             var nextMidnight = now.Date.AddDays(1);
             var delay = nextMidnight - now;
 
-            _logger.LogInformation(
-                "BillingBackgroundService: next run at {NextRun} (in {Delay})",
-                nextMidnight,
-                delay);
+            _logger.LogInformation("BillingBackgroundService: next run at {NextRun} (in {Delay})",
+                nextMidnight, delay);
 
             await Task.Delay(delay, stoppingToken);
         }
@@ -149,11 +129,7 @@ public class BillingBackgroundService : BackgroundService
             return 0;
         }
 
-        var months =
-            (currentDate.Year - dueDate.Year) * 12 +
-            currentDate.Month -
-            dueDate.Month;
-
+        var months = (currentDate.Year - dueDate.Year) * 12 + currentDate.Month - dueDate.Month;
         return Math.Max(1, months);
     }
     private async Task MarkOverdueBillsAsync(SmartSocietyDbContext context, INotificationService notificationService, DateTime today)
@@ -176,29 +152,20 @@ public class BillingBackgroundService : BackgroundService
 
         foreach (var bill in overdueBills)
         {
-            var wasAlreadyOverdue =
-                bill.Status == BillingStatus.Overdue;
+            var wasAlreadyOverdue = bill.Status == BillingStatus.Overdue;
 
-            var monthsOverdue = CalculateMonthsOverdue(
-                    bill.DueDate,
-                    today);
+            var monthsOverdue = CalculateMonthsOverdue(bill.DueDate, today);
 
-            var newPenalty = Math.Round(
-                    bill.BaseAmount *
-                    penaltyRate *
-                    monthsOverdue,
-                    2);
+            var newPenalty = Math.Round(bill.BaseAmount * penaltyRate * monthsOverdue, 2);
 
-            var penaltyChanged =
-                bill.Penalty != newPenalty;
+            var penaltyChanged = bill.Penalty != newPenalty;
 
             bill.Penalty = newPenalty;
             bill.Status = BillingStatus.Overdue;
             bill.UpdatedAt = DateTime.UtcNow;
 
             _logger.LogInformation(
-                "Bill {BillId} for period {Period} is {MonthsOverdue} month(s) overdue. Penalty: ₹{Penalty}", bill.Id, bill.Period, monthsOverdue, bill.Penalty
-                );
+                "Bill {BillId} for period {Period} is {MonthsOverdue} month(s) overdue. Penalty: ₹{Penalty}", bill.Id, bill.Period, monthsOverdue, bill.Penalty);
 
             if (!wasAlreadyOverdue || penaltyChanged)
             {

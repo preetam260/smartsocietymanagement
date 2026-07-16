@@ -40,26 +40,20 @@ public class BookingHoldExpirationService : BackgroundService
         {
         }
 
-        _logger.LogInformation(
-            "Booking hold expiration background service stopped.");
+        _logger.LogInformation("Booking hold expiration background service stopped.");
     }
 
     private async Task RunExpirationCycleAsync(CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
-        _logger.LogDebug(
-            "Booking hold expiration cycle started at {StartedAtUtc}",
-            DateTime.UtcNow);
+        _logger.LogDebug("Booking hold expiration cycle started at {StartedAtUtc}", DateTime.UtcNow);
 
         try
         {
-            await using var scope =
-                _scopeFactory.CreateAsyncScope();
+            await using var scope = _scopeFactory.CreateAsyncScope();
 
-            var bookingService =
-                scope.ServiceProvider
-                    .GetRequiredService<IBookingService>();
+            var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
             await bookingService.ExpireHoldsAsync();
 
@@ -68,8 +62,7 @@ public class BookingHoldExpirationService : BackgroundService
             _logger.LogInformation("Booking hold expiration cycle completed successfully " + "in {ElapsedMilliseconds} ms",
                 stopwatch.ElapsedMilliseconds);
         }
-        catch (OperationCanceledException)
-            when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             _logger.LogInformation(
                 "Booking hold expiration cycle was cancelled " +
@@ -80,10 +73,8 @@ public class BookingHoldExpirationService : BackgroundService
             stopwatch.Stop();
 
             _logger.LogError(
-                ex,
-                "Booking hold expiration cycle failed after " +
-                "{ElapsedMilliseconds} ms",
-                stopwatch.ElapsedMilliseconds);
+                ex, "Booking hold expiration cycle failed after " +
+                "{ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
         }
     }
 }

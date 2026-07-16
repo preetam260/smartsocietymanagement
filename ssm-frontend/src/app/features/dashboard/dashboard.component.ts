@@ -162,13 +162,8 @@ export class DashboardComponent implements OnInit {
 
   private loadAdminDashboard(): void {
     forkJoin({
-      users: this.userService
-        .getAllPaged({
-          pageNumber: 1,
-          pageSize: 1
-        })
-        .pipe(
-          catchError(() =>
+      users: this.userService.getAllPaged({pageNumber: 1,pageSize: 1})
+        .pipe(catchError(() =>
             of({
               totalCount: 0,
               items: []
@@ -177,30 +172,20 @@ export class DashboardComponent implements OnInit {
         ),
 
       complaints: this.complaintService
-        .getAll()
-        .pipe(
-          catchError(() => of([]))
-        ),
+        .getAll().pipe(
+          catchError(() => of([]))),
 
       facilities: this.facilityService
-        .getActive()
-        .pipe(
-          catchError(() => of([]))
-        ),
+        .getActive().pipe(
+          catchError(() => of([]))),
 
       visitors: this.visitorService
-        .getByStatus('Pending')
-        .pipe(
-          catchError(() => of([]))
-        ),
+        .getByStatus('Pending').pipe(
+          catchError(() => of([]))),
 
       announcements: this.announcementService
-        .getAllPaged({
-          pageNumber: 1,
-          pageSize: 1
-        })
-        .pipe(
-          catchError(() =>
+        .getAllPaged({pageNumber: 1,pageSize: 1})
+        .pipe(catchError(() =>
             of({
               totalCount: 0,
               items: []

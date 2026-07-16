@@ -183,7 +183,7 @@ select * from "Facilities";
 -- ================= BOOKINGS (4) =================
 
 INSERT INTO "Bookings"
-("Id","FacilityId","UserId","Date","StartTime","EndTime","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
+("Id","FacilityId","UserId","Date","StartTime","EndTime","SeatsBooked","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
 SELECT
     gen_random_uuid(),
     f."Id",
@@ -191,6 +191,7 @@ SELECT
     CURRENT_DATE + 2,
     NOW() + INTERVAL '2 hours',
     NOW() + INTERVAL '4 hours',
+    2,
     1000,
     2,
     false,
@@ -205,7 +206,7 @@ CROSS JOIN LATERAL (
 ) u;
 
 INSERT INTO "Bookings"
-("Id","FacilityId","UserId","Date","StartTime","EndTime","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
+("Id","FacilityId","UserId","Date","StartTime","EndTime","SeatsBooked","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
 SELECT
     gen_random_uuid(),
     f."Id",
@@ -213,6 +214,7 @@ SELECT
     CURRENT_DATE + 1,
     NOW() + INTERVAL '1 hour',
     NOW() + INTERVAL '2 hours',
+    1,
     200,
     1,
     false,
@@ -227,7 +229,7 @@ CROSS JOIN LATERAL (
 ) u;
 
 INSERT INTO "Bookings"
-("Id","FacilityId","UserId","Date","StartTime","EndTime","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
+("Id","FacilityId","UserId","Date","StartTime","EndTime","SeatsBooked","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
 SELECT
     gen_random_uuid(),
     f."Id",
@@ -235,6 +237,7 @@ SELECT
     CURRENT_DATE + 3,
     NOW() + INTERVAL '3 hours',
     NOW() + INTERVAL '5 hours',
+    1,
     600,
     2,
     false,
@@ -249,7 +252,7 @@ CROSS JOIN LATERAL (
 ) u;
 
 INSERT INTO "Bookings"
-("Id","FacilityId","UserId","Date","StartTime","EndTime","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
+("Id","FacilityId","UserId","Date","StartTime","EndTime","SeatsBooked","TotalCost","Status","IsDeleted","CreatedAt","UpdatedAt")
 SELECT
     gen_random_uuid(),
     f."Id",
@@ -257,6 +260,7 @@ SELECT
     CURRENT_DATE + 5,
     NOW() + INTERVAL '6 hours',
     NOW() + INTERVAL '7 hours',
+    3,
     200,
     3,
     false,

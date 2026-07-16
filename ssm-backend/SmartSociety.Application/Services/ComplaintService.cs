@@ -80,8 +80,7 @@ public class ComplaintService : IComplaintService
     {
         var complaint = await _uow.Complaints.GetByIdAsync(id)
             ?? throw new NotFoundException("Complaint", id);
-
-        // Validate transition
+            
         var validTransitions = new Dictionary<ComplaintStatus, IEnumerable<ComplaintStatus>>
         {
             [ComplaintStatus.Open] = [ComplaintStatus.InProgress, ComplaintStatus.Resolved, ComplaintStatus.Rejected],
