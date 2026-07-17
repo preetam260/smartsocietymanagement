@@ -217,14 +217,15 @@ builder.Services.AddSwaggerGen(options =>
 
 #region CORS
 
+var corsOrigins = builder.Configuration["CorsOrigins"]?.Split(',')
+    ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
         policy
-            .WithOrigins("http://localhost:4200")
-            .WithOrigins("https://localhost:4200","http://localhost:4200",
-                "https://localhost:49938", "http://localhost:49938")
+            .WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
