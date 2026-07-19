@@ -46,12 +46,13 @@
               icon="📝" />
           </a>
 
-          <a routerLink="/visitors" class="stat-link">
-            <app-stat-card
-              label="Pending Visitors"
-              [value]="stats().pendingVisitors ?? 0"
-              icon="🚶" />
-          </a>
+        <a routerLink="/visitors" class="stat-link">
+          <app-stat-card label="Checked-In Visitors" [value]="stats().checkedInVisitors ?? 0" icon="🚶" />
+        </a>
+
+        <a routerLink="/bills" class="stat-link">
+          <app-stat-card label="Outstanding Dues" [value]="'₹' + (stats().outstandingDues ?? 0)" icon="💰" />
+        </a>
 
           <a routerLink="/facilities" class="stat-link">
             <app-stat-card
@@ -513,10 +514,11 @@
         <section class="stats-grid security-stats">
 
           <a routerLink="/visitors" class="stat-link">
-            <app-stat-card
-              label="Pending Visitors"
-              [value]="stats().pendingVisitors ?? 0"
-              icon="⏳" />
+            <app-stat-card label="Expected Today" [value]="stats().expectedToday ?? 0" icon="⏳" />
+          </a>
+          
+          <a routerLink="/visitors" class="stat-link">
+            <app-stat-card label="Checked-In Now" [value]="stats().checkedInVisitors ?? 0" icon="🚶" />
           </a>
 
           <a routerLink="/visitors/checkin" class="stat-link">

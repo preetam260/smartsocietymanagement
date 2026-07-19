@@ -35,13 +35,17 @@ interface DashboardStats {
   openComplaints?: number;
   inProgressComplaints?: number;
   activeFacilities?: number;
-  pendingVisitors?: number;
   totalAnnouncements?: number;
+  checkedInVisitors?: number;  
+  expectedToday?: number;       
+  outstandingDues?: number;     
 
   myApartments?: number;
   myUnpaidBills?: number;
   myOpenComplaints?: number;
   myAnnouncements?: number;
+
+  checkedOutToday?: number;    
 }
 
 @Component({
@@ -162,108 +166,59 @@ export class DashboardComponent implements OnInit {
 
   private loadAdminDashboard(): void {
     forkJoin({
-      users: this.userService.getAllPaged({pageNumber: 1,pageSize: 1})
-        .pipe(catchError(() =>
-            of({
-              totalCount: 0,
-              items: []
-            })
-          )
-        ),
-
-      complaints: this.complaintService
-        .getAll().pipe(
-          catchError(() => of([]))),
-
-      facilities: this.facilityService
-        .getActive().pipe(
-          catchError(() => of([]))),
-
-      visitors: this.visitorService
-        .getByStatus('Pending').pipe(
-          catchError(() => of([]))),
-
-      announcements: this.announcementService
-        .getAllPaged({pageNumber: 1,pageSize: 1})
-        .pipe(catchError(() =>
-            of({
-              totalCount: 0,
-              items: []
-            })
-          )
-        )
+      users: this.userService.getAllPaged({ pageNumber: 1, pageSize: 1 })
+        .pipe(catchError(() => of({ totalCount: 0, items: [] }))),
+      complaints: this.complaintService.getAll().pipe(catchError(() => of([]))),
+      facilities: this.facilityService.getActive().pipe(catchError(() => of([]))),
+      visitors: this.visitorService.getAll().pipe(catchError(() => of([]))),
+      pendingBills: this.billService.getPending().pipe(catchError(() => of([]))),
+      announcements: this.announcementService.getAllPaged({ pageNumber: 1, pageSize: 1 })
+        .pipe(catchError(() => of({ totalCount: 0, items: [] })))
     }).subscribe({
-      next: ({users,complaints,facilities,visitors,announcements
-      }) => {
-        const complaintList =
-          complaints as any[];
+      next: ({ users, complaints, facilities, visitors, pendingBills, announcements }) => {
+        const complaintList = complaints as any[];
+        const visitorList = visitors as any[];
+        const billList = pendingBills as any[];
 
-        const openComplaints =
-          complaintList.filter(
-            complaint =>
-              complaint.status === 'Open'
-          ).length;
+        const openComplaints = complaintList.filter(c => c.status === 'Open').length;
+        const inProgressComplaints = complaintList.filter(c => c.status === 'InProgress').length;
+        const resolvedComplaints = complaintList.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
 
-        const inProgressComplaints =
-          complaintList.filter(
-            complaint =>
-              complaint.status === 'InProgress'
-          ).length;
+        const totalUsers = (users as any).totalCount ?? 0;
+        const activeFacilities = facilities.length;
+        const totalAnnouncements = (announcements as any).totalCount ?? 0;
 
-        const resolvedComplaints =
-          complaintList.filter(
-            complaint =>
-              complaint.status === 'Resolved' ||
-              complaint.status === 'Closed'
-          ).length;
+        const checkedInVisitors = visitorList.filter(v => v.status === 'CheckedIn').length;
+        const outstandingDues = billList.reduce((sum, b) => sum + (b.total ?? 0), 0);
 
-        const totalUsers =
-          (users as any).totalCount ?? 0;
-
-        const activeFacilities =
-          facilities.length;
-
-        const pendingVisitors =
-          visitors.length;
-
-        const totalAnnouncements =
-          (announcements as any).totalCount ?? 0;
-
-        this.stats.set({totalUsers,openComplaints,inProgressComplaints,activeFacilities,pendingVisitors,totalAnnouncements
+        this.stats.set({
+          totalUsers, openComplaints, inProgressComplaints, activeFacilities,
+          totalAnnouncements, checkedInVisitors, outstandingDues
         });
 
         this.doughnutData.set({
-          labels: ['Open','In Progress','Resolved'],
-
-          datasets: [
-            {
-              data: [openComplaints,inProgressComplaints,resolvedComplaints],
-              backgroundColor: ['#dc2626','#d97706','#0f766e'],
-              borderWidth: 0,
-              hoverOffset: 5
-            }
-          ]
+          labels: ['Open', 'In Progress', 'Resolved'],
+          datasets: [{
+            data: [openComplaints, inProgressComplaints, resolvedComplaints],
+            backgroundColor: ['#dc2626', '#d97706', '#0f766e'],
+            borderWidth: 0, hoverOffset: 5
+          }]
         });
 
+        const paidBills = billList.filter(b => b.status === 'Paid').length; 
         this.barData.set({
-          labels: ['Users','Facilities','Visitors','Announcements'],
-          datasets: [
-            {
-              label: 'Total',
-              data: [totalUsers,activeFacilities,pendingVisitors,totalAnnouncements],
-              backgroundColor: ['#0f766e','#0891b2','#d97706','#2563eb'],
-              borderRadius: 6,
-              maxBarThickness: 48
-            }
-          ]
+          labels: ['Checked-In Visitors', 'Active Facilities', 'Open Complaints', 'Bills Pending'],
+          datasets: [{
+            label: 'Current count',
+            data: [checkedInVisitors, activeFacilities, openComplaints + inProgressComplaints, billList.length],
+            backgroundColor: ['#0f766e', '#0891b2', '#dc2626', '#d97706'],
+            borderRadius: 6, maxBarThickness: 48
+          }]
         });
 
         this.loading.set(false);
       },
-
-      error: () => {
-        this.loading.set(false);
-      }
+      error: () => this.loading.set(false)
     });
   }
 
@@ -377,10 +332,6 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
-
-  // =========================
-  // RESIDENT
-  // =========================
 
   private loadResidentDashboard(): void {
     forkJoin({
@@ -529,54 +480,37 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // =========================
-  // SECURITY
-  // =========================
-
   private loadSecurityDashboard(): void {
-    this.visitorService
-      .getByStatus('Pending')
-      .pipe(
-        catchError(() => of([]))
-      )
+    this.visitorService.getAll().pipe(catchError(() => of([])))
       .subscribe({
-        next: visitors => {
-          const pendingVisitors =
-            visitors.length;
+        next: (visitors: any[]) => {
+          const today = new Date().toDateString();
 
-          this.stats.set({
-            pendingVisitors
-          });
+          const expectedToday = visitors.filter(v =>
+            v.status === 'Approved' && new Date(v.eta).toDateString() === today
+          ).length;
+
+          const checkedInVisitors = visitors.filter(v => v.status === 'CheckedIn').length;
+
+          const checkedOutToday = visitors.filter(v =>
+            v.status === 'CheckedOut' && v.updatedAt && new Date(v.updatedAt).toDateString() === today
+          ).length;
+
+          this.stats.set({ expectedToday, checkedInVisitors, checkedOutToday });
 
           this.barData.set({
-            labels: [
-              'Pending Visitors'
-            ],
-
-            datasets: [
-              {
-                label: 'Visitors',
-
-                data: [
-                  pendingVisitors
-                ],
-
-                backgroundColor: [
-                  '#d97706'
-                ],
-
-                borderRadius: 6,
-                maxBarThickness: 70
-              }
-            ]
+            labels: ['Expected Today', 'Checked In Now', 'Checked Out Today'],
+            datasets: [{
+              label: 'Visitors',
+              data: [expectedToday, checkedInVisitors, checkedOutToday],
+              backgroundColor: ['#d97706', '#0f766e', '#64748b'],
+              borderRadius: 6, maxBarThickness: 70
+            }]
           });
 
           this.loading.set(false);
         },
-
-        error: () => {
-          this.loading.set(false);
-        }
+        error: () => this.loading.set(false)
       });
   }
 }
