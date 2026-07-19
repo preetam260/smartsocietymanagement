@@ -119,4 +119,12 @@ public class VisitorController : ControllerBase
         var visitors = await _visitorService.GetByUserIdAsync(userId);
         return Ok(visitors);
     }
+
+    [HttpGet("{id:guid}/history")]
+    [Authorize(Roles = "Admin,SecurityStaff")]
+    public async Task<ActionResult<VisitorHistoryDto>> GetHistory(Guid id)
+    {
+        var history = await _visitorService.GetVisitorHistoryAsync(id);
+        return Ok(history);
+    }
 }

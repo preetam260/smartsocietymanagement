@@ -233,6 +233,44 @@ public class VisitorService : IVisitorService
             await _notificationService.CreateAsync(r.UserId, title, message);
     }
 
+    public async Task<VisitorHistoryDto> GetVisitorHistoryAsync(Guid visitorId)
+    {
+        var visitor = await _uow.Visitors.GetByIdAsync(visitorId)
+            ?? throw new NotFoundException("Visitor", visitorId);
+
+        var allPasses = await _uow.Visitors.GetByEmailAsync(visitor.Email, visitor.ApartmentId);
+
+        var passDtos = new List<VisitorPassHistoryDto>();
+        var totalVisits = 0;
+
+        foreach (var pass in allPasses)
+        {
+            var entries = await _uow.VisitorEntries.GetByVisitorIdAsync(pass.Id);
+            var entryDtos = new List<VisitorEntryResponseDto>();
+            foreach (var entry in entries)
+                entryDtos.Add(await MapEntryToDtoAsync(entry, pass));
+
+            totalVisits += entryDtos.Count;
+
+            passDtos.Add(new VisitorPassHistoryDto
+            {
+                VisitorId = pass.Id,
+                Purpose = pass.Purpose,
+                ETA = pass.ETA,
+                Status = pass.Status,
+                Entries = entryDtos
+            });
+        }
+
+        return new VisitorHistoryDto
+        {
+            VisitorName = visitor.Name,
+            Email = visitor.Email,
+            TotalVisits = totalVisits,
+            Passes = passDtos.OrderByDescending(p => p.ETA).ToList()
+        };
+    }
+
     private async Task<VisitorResponseDto> MapToDtoAsync(Visitor v)
     {
         var apartment = await _uow.Apartments.GetByIdAsync(v.ApartmentId);
@@ -252,14 +290,6 @@ public class VisitorService : IVisitorService
         };
     }
 
-    private async Task<IEnumerable<VisitorResponseDto>> MapToDtoListAsync(IEnumerable<Visitor> visitors)
-    {
-        var result = new List<VisitorResponseDto>();
-        foreach (var v in visitors)
-            result.Add(await MapToDtoAsync(v));
-        return result;
-    }
-
     private async Task<VisitorEntryResponseDto> MapEntryToDtoAsync(VisitorEntry entry, Visitor visitor)
     {
         var staff = await _uow.Users.GetByIdAsync(entry.StaffId);
@@ -273,5 +303,13 @@ public class VisitorService : IVisitorService
             StaffId = entry.StaffId,
             StaffName = staff?.Name ?? "Unknown"
         };
+    }
+
+        private async Task<IEnumerable<VisitorResponseDto>> MapToDtoListAsync(IEnumerable<Visitor> visitors)
+    {
+        var result = new List<VisitorResponseDto>();
+        foreach (var v in visitors)
+            result.Add(await MapToDtoAsync(v));
+        return result;
     }
 }

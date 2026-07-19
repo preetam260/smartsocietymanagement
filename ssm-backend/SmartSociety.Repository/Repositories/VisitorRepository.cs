@@ -15,6 +15,14 @@ public class VisitorRepository : Repository<Visitor>, IVisitorRepository
         return await _context.Visitors.FirstOrDefaultAsync(v => v.QrToken == qrToken);
     }
 
+    public async Task<IEnumerable<Visitor>> GetByEmailAsync(string email, Guid apartmentId)
+    {
+        return await _context.Visitors
+            .Where(v => v.Email == email && v.ApartmentId == apartmentId)
+            .OrderByDescending(v => v.ETA)
+            .ToListAsync();
+    }
+     
     public async Task<IEnumerable<Visitor>> GetByApartmentIdAsync(Guid id)
     {
         return await _context.Visitors.Where(v => v.ApartmentId == id)

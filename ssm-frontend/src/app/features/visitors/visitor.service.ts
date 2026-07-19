@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { VisitorResponse, RegisterVisitorDto, VisitorEntryResponse } from './visitor.model';
+import { VisitorResponse, RegisterVisitorDto, VisitorEntryResponse, VisitorHistoryResponse } from './visitor.model';
 import { PagedResult, PaginationQuery } from '../../core/models/paged-result.model';
 import { VisitorStatus } from '../../core/models/enums';
 
@@ -58,4 +58,8 @@ export class VisitorService {
   getEntries(visitorId: string) {
     return this.http.get<VisitorEntryResponse[]>(`${this.base}/${visitorId}/entries`);
   }
+  
+  getHistory(visitorId: string) {
+    return this.http.get<VisitorHistoryResponse>(`${this.base}/${visitorId}/history`);
+}
 }

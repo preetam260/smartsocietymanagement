@@ -1,23 +1,46 @@
 <div class="page-header">
-      <h1>Visitor Entry Log</h1>
-      <a routerLink="/visitors" class="btn btn-outline">← Back</a>
+  <h1>Visitor History</h1>
+  <a routerLink="/visitors" class="btn btn-outline">← Back</a>
+</div>
+
+@if (loading()) { <app-loading-spinner /> }
+@else if (!history()) { <app-empty-state message="No history found" /> }
+@else {
+  <div class="card mb-lg">
+    <div class="card-body">
+      <h2>{{ history()!.visitorName }}</h2>
+      <p class="text-sm text-muted">{{ history()!.email }}</p>
+      <p class="text-sm"><strong>{{ history()!.totalVisits }}</strong> total completed visit(s) across {{ history()!.passes.length }} registration(s)</p>
     </div>
-    @if (loading()) { <app-loading-spinner /> }
-    @else if (!entries().length) { <app-empty-state message="No entry records found" /> }
-    @else {
-      <div class="card"><div class="card-body" style="padding:0">
-        <div class="table-wrapper"><table>
-          <thead><tr><th>Visitor</th><th>Check In</th><th>Check Out</th><th>Staff</th></tr></thead>
-          <tbody>
-            @for (e of entries(); track e.id) {
-              <tr>
-                <td>{{ e.visitorName }}</td>
-                <td>{{ e.checkinTime | date:'medium' }}</td>
-                <td>{{ e.checkoutTime ? (e.checkoutTime | date:'medium') : 'Still inside' }}</td>
-                <td>{{ e.staffName }}</td>
-              </tr>
-            }
-          </tbody>
-        </table></div>
-      </div></div>
-    }
+  </div>
+
+  @for (pass of history()!.passes; track pass.visitorId) {
+    <div class="card mb-md">
+      <div class="card-header flex" style="justify-content:space-between;align-items:center">
+        <div>
+          <strong>{{ pass.purpose }}</strong>
+          <span class="text-sm text-muted"> — invited for {{ pass.eta | date:'medium' }}</span>
+        </div>
+        <app-status-badge [status]="pass.status" />
+      </div>
+      <div class="card-body" style="padding:0">
+        @if (!pass.entries.length) {
+          <p class="text-sm text-muted" style="padding:var(--spacing-md)">Never checked in on this pass.</p>
+        } @else {
+          <div class="table-wrapper"><table>
+            <thead><tr><th>Check In</th><th>Check Out</th><th>Staff</th></tr></thead>
+            <tbody>
+              @for (e of pass.entries; track e.id) {
+                <tr>
+                  <td>{{ e.checkinTime | date:'medium' }}</td>
+                  <td>{{ e.checkoutTime ? (e.checkoutTime | date:'medium') : 'Still inside' }}</td>
+                  <td>{{ e.staffName }}</td>
+                </tr>
+              }
+            </tbody>
+          </table></div>
+        }
+      </div>
+    </div>
+  }
+}

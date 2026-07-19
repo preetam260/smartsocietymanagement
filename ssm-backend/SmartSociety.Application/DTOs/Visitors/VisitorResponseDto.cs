@@ -15,4 +15,5 @@ public class VisitorResponseDto
     public DateTime ETA {get; set;}
     public DateTime ExpiresAt {get; set;}
     public VisitorStatus Status {get; set;}
+    public DateTime? UpdatedAt { get; set; }
 }

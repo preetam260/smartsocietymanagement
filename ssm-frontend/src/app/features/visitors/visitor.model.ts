@@ -12,6 +12,22 @@ export interface VisitorResponse {
   eta: string;
   expiresAt: string;
   status: VisitorStatus;
+  updatedAt: string | null; 
+}
+
+export interface VisitorPassHistory {
+  visitorId: string;
+  purpose: string;
+  eta: string;
+  status: VisitorStatus;
+  entries: VisitorEntryResponse[];
+}
+
+export interface VisitorHistoryResponse {
+  visitorName: string;
+  email: string;
+  totalVisits: number;
+  passes: VisitorPassHistory[];
 }
 
 export interface RegisterVisitorDto {

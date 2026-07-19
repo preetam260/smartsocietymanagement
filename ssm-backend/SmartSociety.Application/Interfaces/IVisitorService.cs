@@ -17,4 +17,5 @@ public interface IVisitorService
     Task<VisitorEntryResponseDto> CheckInAsync(string token, Guid staffId); 
     Task<VisitorEntryResponseDto> CheckOutAsync(Guid visitorId, Guid staffId);
     Task<IEnumerable<VisitorEntryResponseDto>> GetEntriesByVisitorIdAsync(Guid visitorId);
+    Task<VisitorHistoryDto> GetVisitorHistoryAsync(Guid visitorId);
 }
