@@ -10,8 +10,12 @@ using SmartSociety.API.BackgroundJobs;
 using SmartSociety.API.Hubs;
 using SmartSociety.API.Middleware;
 using SmartSociety.API.Services;
+using SmartSociety.Application.Complaints.Triage;
 using SmartSociety.Application.Interfaces;
 using SmartSociety.Application.Services;
+using SmartSociety.Infrastructure.Ai;
+using SmartSociety.Infrastructure.BackgroundJobs;
+using SmartSociety.Repository.Ai;
 using SmartSociety.Repository.Context;
 using SmartSociety.Repository.Interfaces;
 using SmartSociety.Repository.Repositories;
@@ -73,6 +77,13 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IQRService, QRService>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
 
+builder.Services.Configure<AnthropicOptions>(builder.Configuration.GetSection("Anthropic"));
+
+builder.Services.AddHttpClient<IComplaintTriageService, ComplaintTriageService>();
+
+builder.Services.AddSingleton<IComplaintTriageQueue, ComplaintTriageQueue>();
+
+
 #endregion
 
 #region SignalR
@@ -86,6 +97,7 @@ builder.Services.AddScoped<INotificationPushService, NotificationPushService>();
 
 builder.Services.AddHostedService<BillingBackgroundService>();
 builder.Services.AddHostedService<BookingHoldExpirationService>();
+builder.Services.AddHostedService<ComplaintTriageBackgroundService>();
 
 #endregion
 
@@ -178,6 +190,7 @@ builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase; // ADD THIS
         options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter());
     });

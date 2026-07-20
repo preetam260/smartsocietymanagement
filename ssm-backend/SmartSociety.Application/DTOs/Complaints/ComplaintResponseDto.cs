@@ -15,4 +15,10 @@ public class ComplaintResponseDto
     public ComplaintStatus Status {get; set;}
     public string? AdminResponse {get; set;}
     public DateTime CreatedAt {get; set;}
+
+    public ComplaintCategory? Category {get; set;}
+    public ComplaintPriority? Priority {get; set;}
+    public string? DraftAdminResponse {get; set;}
+    public string? PossibleDuplicateIdsCsv {get; set;}
+    public bool TriageProcessed {get; set;}
 }

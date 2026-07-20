@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ComplaintService } from '../complaint.service';
-import { ComplaintResponse } from '../complaint.model';
+import { ComplaintResponse, PRIORITY_ORDER, ComplaintCategory, ComplaintPriority } from '../complaint.model';
 import { ComplaintStatus } from '../../../core/models/enums';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
@@ -23,11 +23,15 @@ export class ComplaintListComponent implements OnInit {
   private svc = inject(ComplaintService);
   private toast = inject(ToastService);
   auth = inject(AuthService);
+
   loading = signal(true);
   allComplaints = signal<ComplaintResponse[]>([]);
   activeComplaint = signal<ComplaintResponse | null>(null);
+
   searchTerm = signal('');
   selectedStatus = signal('');
+  priorityFilter = signal<ComplaintPriority | ''>('');
+  categoryFilter = signal<ComplaintCategory | ''>('');
   currentPage = signal(1);
 
   statusForm = new FormGroup({
@@ -35,16 +39,27 @@ export class ComplaintListComponent implements OnInit {
     adminResponse: new FormControl(''),
   });
 
+  // single computed pipeline: search -> status -> priority -> category -> sort by priority
   filtered = computed(() => {
     let list = this.allComplaints();
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
+    const priority = this.priorityFilter();
+    const category = this.categoryFilter();
+
     if (term) list = list.filter(c =>
       c.title.toLowerCase().includes(term) ||
       c.userName.toLowerCase().includes(term)
     );
     if (status) list = list.filter(c => c.status === status);
-    return list;
+    if (priority) list = list.filter(c => c.priority === priority);
+    if (category) list = list.filter(c => c.category === category);
+
+    return [...list].sort((a, b) => {
+      const pa = a.priority ? PRIORITY_ORDER[a.priority] : 99;
+      const pb = b.priority ? PRIORITY_ORDER[b.priority] : 99;
+      return pa - pb;
+    });
   });
 
   paginated = computed(() => {
@@ -59,7 +74,13 @@ export class ComplaintListComponent implements OnInit {
     return s === 'Resolved' || s === 'Rejected';
   }
 
-  ngOnInit() { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
+
+  hasDuplicates(c: ComplaintResponse): boolean {
+    return !!c.possibleDuplicateIdsCsv && c.possibleDuplicateIdsCsv.length > 0;
+  }
 
   onSearch(e: Event) {
     this.searchTerm.set((e.target as HTMLInputElement).value);
@@ -68,6 +89,16 @@ export class ComplaintListComponent implements OnInit {
 
   onStatusFilter(e: Event) {
     this.selectedStatus.set((e.target as HTMLSelectElement).value);
+    this.currentPage.set(1);
+  }
+
+  onPriorityFilter(e: Event) {
+    this.priorityFilter.set((e.target as HTMLSelectElement).value as ComplaintPriority | '');
+    this.currentPage.set(1);
+  }
+
+  onCategoryFilter(e: Event) {
+    this.categoryFilter.set((e.target as HTMLSelectElement).value as ComplaintCategory | '');
     this.currentPage.set(1);
   }
 
@@ -82,7 +113,15 @@ export class ComplaintListComponent implements OnInit {
 
   openStatusModal(c: ComplaintResponse) {
     this.activeComplaint.set(c);
-    this.statusForm.reset({ status: 'InProgress', adminResponse: '' });
+    // Pre-fill with the AI draft if one exists and the likely action is resolving.
+    const prefill = c.draftAdminResponse ?? '';
+    this.statusForm.reset({ status: 'InProgress', adminResponse: prefill });
+  }
+
+  useAiDraft() {
+    const c = this.activeComplaint();
+    if (!c?.draftAdminResponse) return;
+    this.statusForm.controls.adminResponse.setValue(c.draftAdminResponse);
   }
 
   closeModal() { this.activeComplaint.set(null); }

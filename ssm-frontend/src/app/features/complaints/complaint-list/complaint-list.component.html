@@ -16,6 +16,23 @@
         <option value="Rejected">Rejected</option>
         <option value="Closed">Closed</option>
       </select>
+      <select class="form-control" style="max-width:160px" (change)="onPriorityFilter($event)">
+        <option value="">All Priorities</option>
+        <option value="Urgent">Urgent</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <select class="form-control" style="max-width:180px" (change)="onCategoryFilter($event)">
+        <option value="">All Categories</option>
+        <option value="Plumbing">Plumbing</option>
+        <option value="Electrical">Electrical</option>
+        <option value="Security">Security</option>
+        <option value="Parking">Parking</option>
+        <option value="Noise">Noise</option>
+        <option value="CommonArea">Common Area</option>
+        <option value="Other">Other</option>
+      </select>
     </div>
   </div>
   @if (loading()) { <app-loading-spinner /> }
@@ -23,35 +40,75 @@
   @else {
     <div class="table-wrapper"><table>
       <thead><tr>
-        <th>Title</th><th>Apartment</th><th>Submitted By</th><th>Status</th><th>Date</th>
+        <th>Title</th><th>Apartment</th><th>Submitted By</th><th>Status</th><th>Date</th><th>Priority</th>
         @if (auth.role() === 'Admin') { <th>Actions</th> }
       </tr></thead>
-      <tbody>
-        @for (c of paginated(); track c.id) {
-          <tr>
-            <td>
-              <strong>{{ c.title }}</strong><br>
-              <span class="text-muted text-xs">{{ c.description | slice:0:80 }}...</span>
-              @if (c.adminResponse) {
-                <div class="text-xs text-muted mt-xs"><em>Admin: {{ c.adminResponse }}</em></div>
-              }
-            </td>
-            <td>{{ c.apartmentBlock }}-{{ c.apartmentNumber }}</td>
-            <td>{{ c.userName }}</td>
-            <td><app-status-badge [status]="c.status" /></td>
-            <td>{{ c.createdAt | date:'mediumDate' }}</td>
-            @if (auth.role() === 'Admin') {
-              <td class="actions">
-                @if (availableTransitions(c).length > 0) {
-                  <button class="btn btn-primary btn-sm" (click)="openStatusModal(c)">Update Status</button>
-                } @else {
-                  <span class="text-xs text-muted">{{ statusLabel(c.status) }}</span>
+        <tbody>
+          @for (c of paginated(); track c.id) {
+            <tr>
+              <td>
+                <strong>{{ c.title }}</strong><br>
+                <span class="text-muted text-xs">{{ c.description | slice:0:80 }}...</span>
+
+                @if (c.adminResponse) {
+                  <div class="text-xs text-muted mt-xs">
+                    <em>Admin: {{ c.adminResponse }}</em>
+                  </div>
                 }
               </td>
-            }
-          </tr>
-        }
-      </tbody>
+
+              <td>{{ c.apartmentBlock }}-{{ c.apartmentNumber }}</td>
+
+              <td>{{ c.userName }}</td>
+
+              <td>
+                <app-status-badge [status]="c.status" />
+              </td>
+
+              <td>{{ c.createdAt | date:'mediumDate' }}</td>
+
+              <!-- PRIORITY -->
+              <td>
+                <div class="priority-cell">
+                  @if (c.priority) {
+                    <span class="badge priority-{{ c.priority.toLowerCase() }}">
+                      {{ c.priority }}
+                    </span>
+                  } @else if (!c.triageProcessed) {
+                    <span class="text-xs text-muted">AI analyzing…</span>
+                  } @else {
+                    <span class="text-xs text-muted">—</span>
+                  }
+
+                  @if (hasDuplicates(c)) {
+                    <span
+                      class="badge badge-dupe"
+                      title="Possible duplicate of other open complaints">
+                      dup?
+                    </span>
+                  }
+                </div>
+              </td>
+
+              <!-- ACTIONS -->
+              @if (auth.role() === 'Admin') {
+                <td class="actions">
+                  @if (availableTransitions(c).length > 0) {
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="openStatusModal(c)">
+                      Update Status
+                    </button>
+                  } @else {
+                    <span class="text-xs text-muted">
+                      {{ statusLabel(c.status) }}
+                    </span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
     </table></div>
     @if (totalPages() > 1) {
       <div class="pagination-bar">
@@ -84,6 +141,12 @@
             Admin Response
             @if (requiresResponse) { <span class="text-danger">*</span> }
           </label>
+          @if (activeComplaint()!.draftAdminResponse) {
+            <div class="ai-draft-banner text-xs text-muted mb-xs">
+              AI-suggested response available.
+              <button type="button" class="btn btn-outline btn-sm" (click)="useAiDraft()">Use AI draft</button>
+            </div>
+          }
           <textarea id="adminResponse" class="form-control" [formControl]="statusForm.controls.adminResponse"
             placeholder="{{ requiresResponse ? 'Required for resolving or rejecting' : 'Optional note for In Progress' }}"
             rows="4"></textarea>
@@ -99,3 +162,21 @@
     </div>
   </div>
 }
+
+<style>
+  .badge-dupe {
+    background-color: #f59e0b;
+    color: #fff;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    font-weight: 600;
+  }
+
+  .priority-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+</style>

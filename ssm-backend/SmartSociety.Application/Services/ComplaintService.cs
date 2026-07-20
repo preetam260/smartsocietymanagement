@@ -11,11 +11,13 @@ public class ComplaintService : IComplaintService
 {
     private readonly IUnitOfWork _uow;
     private readonly INotificationService _notificationService;
+    private readonly IComplaintTriageQueue _triageQueue;
 
-    public ComplaintService(IUnitOfWork uow, INotificationService notificationService)
+    public ComplaintService(IUnitOfWork uow, INotificationService notificationService, IComplaintTriageQueue triageQueue)
     {
         _uow = uow;
         _notificationService = notificationService;
+        _triageQueue = triageQueue;
     }
 
     public async Task<ComplaintResponseDto> CreateAsync(CreateComplaintDto dto, Guid userId)
@@ -29,14 +31,19 @@ public class ComplaintService : IComplaintService
         var complaint = new Complaint
         {
             UserId = userId,
-            ApartmentId = dto.ApartmentId,
+            Id = Guid.NewGuid(),
             Title = dto.Title,
             Description = dto.Description,
-            Status = ComplaintStatus.Open
+            ApartmentId = dto.ApartmentId,
+            Status = ComplaintStatus.Open,
+            CreatedAt = DateTime.UtcNow,
+            TriageProcessed = false
         };
 
         await _uow.Complaints.AddAsync(complaint);
         await _uow.SaveChangesAsync();
+
+        _triageQueue.Enqueue(complaint.Id);
 
         return await MapToDtoAsync(complaint);
     }
@@ -129,7 +136,13 @@ public class ComplaintService : IComplaintService
             Description = c.Description,
             Status = c.Status,
             AdminResponse = c.AdminResponse,
-            CreatedAt = c.CreatedAt
+            CreatedAt = c.CreatedAt,
+
+            Category = c.Category,
+            Priority = c.Priority,
+            DraftAdminResponse = c.DraftAdminResponse,
+            PossibleDuplicateIdsCsv = c.PossibleDuplicateIdsCsv,
+            TriageProcessed = c.TriageProcessed
         };
     }
 

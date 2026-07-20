@@ -9,7 +9,6 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- ================= USERS (9) =================
 
 INSERT INTO "Users" ("Id","Name","Email","PasswordHash","PhoneNumber","Role","IsActive","IsDeleted","CreatedAt","UpdatedAt")
 VALUES (
