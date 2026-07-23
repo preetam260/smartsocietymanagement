@@ -152,7 +152,7 @@ public class BookingService : IBookingService
         if (!IsThirtyMinuteBoundary(dto.StartTime) || !IsThirtyMinuteBoundary(dto.EndTime))
             throw new BadRequestException("Bookings must start and end on a 30-minute boundary.");
 
-        if (dto.SeatsBooked is < 1 or > 5)
+        if (!dto.BookFullFacility && (dto.SeatsBooked is < 1 or > 5))
             throw new BadRequestException("Seats booked must be between 1 and 5.");
 
         await using var transaction = await _uow.BeginTransactionAsync();
@@ -163,6 +163,10 @@ public class BookingService : IBookingService
 
             if (!facility.IsActive)
                 throw new BadRequestException("This facility is not currently available for booking.");
+
+            // Full-facility booking: override seats to total capacity
+            if (dto.BookFullFacility)
+                dto.SeatsBooked = facility.Capacity;
 
             if (dto.SeatsBooked > facility.Capacity)
                 throw new BadRequestException(
@@ -195,20 +199,57 @@ public class BookingService : IBookingService
             await _uow.SaveChangesAsync();
             await transaction.CommitAsync();
 
+            var seatLabel = dto.BookFullFacility
+                ? $"entire facility ({facility.Capacity} seats)"
+                : $"{dto.SeatsBooked} seat(s)";
+
             await _notificationService.CreateAsync(
                 userId,
-                "Booking Held",
-                $"{facility.Name} held for {dto.SeatsBooked} seat(s) on {dto.Date:dd MMM yyyy} " +
+                dto.BookFullFacility ? "Full Facility Booking Held" : "Booking Held",
+                $"{facility.Name} held for {seatLabel} on {dto.Date:dd MMM yyyy} " +
                 $"from {dto.StartTime:hh:mm tt} to {dto.EndTime:hh:mm tt}. " +
                 $"Total: ₹{totalCost}. Complete payment within 10 minutes to confirm.");
 
             return await MapToDtoAsync(booking);
         }
-        catch
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+
+            // Walk the exception chain looking for a PostgreSQL serialization failure
+            // (SqlState 40001). We check via string because Npgsql is not directly
+            // referenced in this layer — it comes transitively through Repository.
+            if (IsSerializationFailure(ex))
+                throw new ConflictException(
+                    "Another booking was made for this slot at the same time. " +
+                    "Please refresh the calendar and try again.");
+
             throw;
         }
+    }
+
+    /// <summary>
+    /// Returns true when the exception (or any inner exception) is a PostgreSQL
+    /// serialization failure (SQLSTATE 40001), without requiring a direct reference
+    /// to the Npgsql assembly.
+    /// </summary>
+    private static bool IsSerializationFailure(Exception? ex)
+    {
+        while (ex != null)
+        {
+            // PostgresException exposes SqlState as a public property.
+            // Use reflection-free duck-typing via the dynamic type name check.
+            var typeName = ex.GetType().Name; // "PostgresException"
+            if (typeName == "PostgresException")
+            {
+                // Access SqlState via the base class property using reflection
+                var sqlState = ex.GetType().GetProperty("SqlState")?.GetValue(ex) as string;
+                if (sqlState == "40001") return true;
+            }
+
+            ex = ex.InnerException;
+        }
+        return false;
     }
 
     private static bool IsThirtyMinuteBoundary(DateTime value)

@@ -18,9 +18,7 @@ export class SignalRService implements OnDestroy {
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(this.hubUrl, {
-        accessTokenFactory: () => this.auth.currentUser()?.token ?? '',
-        transport: signalR.HttpTransportType.WebSockets,
-        skipNegotiation: true 
+        accessTokenFactory: () => this.auth.currentUser()?.token ?? ''
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .configureLogging(signalR.LogLevel.Warning)

@@ -33,7 +33,8 @@ public class ComplaintServiceTest
         _mockUow.Setup(u => u.Users).Returns(_mockUserRepo.Object);
         _mockUow.Setup(u => u.Apartments).Returns(_mockApartmentRepo.Object);
 
-        _service = new ComplaintService(_mockUow.Object, _mockNotif.Object);
+        var mockTriageQueue = new Mock<IComplaintTriageQueue>();
+        _service = new ComplaintService(_mockUow.Object, _mockNotif.Object, mockTriageQueue.Object);
     }
 
     [Test]

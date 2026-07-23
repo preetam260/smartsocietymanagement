@@ -16,6 +16,12 @@ public class CreateBookingDto
     [Required]
     public DateTime EndTime {get; set;}
 
-    [Range(1, 5, ErrorMessage = "Seats booked must be between 1 and 5.")]
+    [Range(1, 500, ErrorMessage = "Seats booked must be at least 1.")]
     public int SeatsBooked {get; set;} = 1;
+
+    /// <summary>
+    /// When true, ignores SeatsBooked and books the entire facility capacity.
+    /// Useful for community hall, party hall, or exclusive event bookings.
+    /// </summary>
+    public bool BookFullFacility {get; set;} = false;
 }

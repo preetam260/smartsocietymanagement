@@ -51,6 +51,10 @@ export class VisitorService {
     return this.http.post<VisitorEntryResponse>(`${this.base}/checkin`, formData);
   }
 
+  checkInByToken(token: string) {
+    return this.http.post<VisitorEntryResponse>(`${this.base}/checkin-token`, { token });
+  }
+
   checkOut(id: string) {
     return this.http.patch<VisitorEntryResponse>(`${this.base}/${id}/checkout`, {});
   }

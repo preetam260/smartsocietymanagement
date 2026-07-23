@@ -1,23 +1,284 @@
 <div class="page-header">
-      <h1>Visitor Check-In</h1>
-      <a routerLink="/visitors" class="btn btn-outline">← Back</a>
+  <h1>Visitor Check-In</h1>
+  <a routerLink="/visitors" class="btn btn-outline">← Back</a>
+</div>
+
+<!-- Mode Switcher -->
+<div class="mode-switcher">
+  <button
+    class="mode-btn"
+    [class.active]="mode() === 'camera'"
+    (click)="switchMode('camera')">
+    📷 Camera Scan
+  </button>
+  <button
+    class="mode-btn"
+    [class.active]="mode() === 'upload'"
+    (click)="switchMode('upload')">
+    📁 Upload Image
+  </button>
+</div>
+
+<!-- Success Result -->
+@if (result()) {
+  <div class="card result-card success-card">
+    <div class="card-body">
+      <div class="result-icon">✅</div>
+      <h2>Checked In Successfully</h2>
+      <div class="result-details">
+        <div class="detail-row">
+          <span class="detail-label">Visitor</span>
+          <span class="detail-value">{{ result()!.visitorName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-in Time</span>
+          <span class="detail-value">{{ result()!.checkinTime }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Verified By</span>
+          <span class="detail-value">{{ result()!.staffName }}</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top: var(--spacing-lg);" (click)="scanAgain()">
+        Scan Next Visitor
+      </button>
     </div>
-    <div class="card"><div class="card-body">
+  </div>
+}
+
+<!-- Camera Mode -->
+@if (!result() && mode() === 'camera') {
+  <div class="card scanner-card">
+    <div class="card-body">
+      <p class="scan-instruction">Point your camera at the visitor's QR code</p>
+
+      @if (cameraError()) {
+        <div class="camera-error">
+          <div class="error-icon">⚠️</div>
+          <p>{{ cameraError() }}</p>
+          <button class="btn btn-outline" (click)="switchMode('upload')">
+            Switch to Upload Mode
+          </button>
+        </div>
+      }
+
+      <div class="scanner-container" [style.display]="cameraError() ? 'none' : 'block'">
+        <div id="qr-reader"></div>
+      </div>
+
+      @if (loading()) {
+        <div class="processing-overlay">
+          <div class="spinner"></div>
+          <p>Verifying visitor…</p>
+        </div>
+      }
+
+      @if (scanning() && !loading() && !cameraError()) {
+        <p class="scan-hint">Scanning… hold the QR code steady</p>
+      }
+    </div>
+  </div>
+}
+
+<!-- Upload Mode -->
+@if (!result() && mode() === 'upload') {
+  <div class="card">
+    <div class="card-body">
       <p class="text-sm text-muted mb-lg">Upload a QR code image to check in a visitor.</p>
       <div class="form-group">
         <label for="qrFile">QR Code Image</label>
         <input id="qrFile" type="file" accept="image/*" class="form-control" (change)="onFileSelect($event)">
       </div>
-      <button class="btn btn-primary" [disabled]="!selectedFile() || loading()" (click)="checkIn()">
+      <button class="btn btn-primary" [disabled]="!selectedFile() || loading()" (click)="checkInFromFile()">
         {{ loading() ? 'Processing...' : 'Check In' }}
       </button>
+    </div>
+  </div>
+}
 
-      @if (result()) {
-        <div class="mt-lg" style="background:var(--color-success-light);padding:var(--spacing-lg);border-radius:var(--radius)">
-          <h3 style="color:#065f46">✅ Checked In Successfully</h3>
-          <p class="text-sm">Visitor: {{ result()!.visitorName }}</p>
-          <p class="text-sm">Time: {{ result()!.checkinTime }}</p>
-          <p class="text-sm">Staff: {{ result()!.staffName }}</p>
-        </div>
-      }
-    </div></div>
+<style>
+  .mode-switcher {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-lg);
+    background: var(--color-grey-light);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    width: fit-content;
+  }
+
+  .mode-btn {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    transition: var(--transition);
+    font-family: inherit;
+  }
+
+  .mode-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    font-weight: 600;
+  }
+
+  .mode-btn:hover:not(.active) {
+    color: var(--color-text);
+  }
+
+  .scanner-card .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-xl);
+  }
+
+  .scan-instruction {
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+  }
+
+  .scanner-container {
+    width: 100%;
+    max-width: 400px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px solid var(--color-border);
+    background: #000;
+  }
+
+  /* Override html5-qrcode default styles */
+  :host ::ng-deep #qr-reader {
+    border: none !important;
+    width: 100% !important;
+  }
+
+  :host ::ng-deep #qr-reader__scan_region {
+    min-height: 300px;
+  }
+
+  :host ::ng-deep #qr-reader__dashboard {
+    padding: 8px !important;
+  }
+
+  :host ::ng-deep #qr-reader__dashboard_section_swaplink {
+    text-decoration: none !important;
+    color: var(--color-primary) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+
+  .scan-hint {
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .processing-overlay {
+    margin-top: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .processing-overlay p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .camera-error {
+    text-align: center;
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .error-icon {
+    font-size: 2rem;
+  }
+
+  .camera-error p {
+    color: var(--color-text-secondary);
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  /* Result card */
+  .result-card {
+    max-width: 500px;
+  }
+
+  .success-card .card-body {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+  }
+
+  .result-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .result-card h2 {
+    color: #065f46;
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .result-details {
+    background: var(--color-success-light);
+    border-radius: var(--radius);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: left;
+    width: 100%;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+  }
+
+  .detail-row:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .detail-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+
+  .detail-value {
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+</style>

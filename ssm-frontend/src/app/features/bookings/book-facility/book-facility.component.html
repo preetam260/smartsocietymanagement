@@ -38,13 +38,30 @@
           <div class="form-error">End time is required</div>
         }
       </div>
-      <div class="form-group">
-        <label for="seatsBooked">Seats</label>
-        <input id="seatsBooked" type="number" min="1" max="5" class="form-control" formControlName="seatsBooked">
-        @if (form.controls.seatsBooked.invalid && form.controls.seatsBooked.touched) {
-          <div class="form-error">Choose between 1 and 5 seats</div>
-        }
+
+      <!-- Full Facility Toggle -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label class="toggle-label" for="bookFullFacility">
+          <input id="bookFullFacility" type="checkbox" formControlName="bookFullFacility"
+            (change)="onFullFacilityToggle()" style="width:auto; margin-right: 8px;">
+          Book Entire Facility
+          @if (selectedFacility) {
+            <span class="capacity-badge">Full {{ selectedFacility.capacity }}-seat exclusive booking</span>
+          }
+        </label>
+        <div class="form-hint">Reserve the whole facility exclusively — no other bookings allowed for this slot.</div>
       </div>
+
+      <!-- Seats (hidden when full facility) -->
+      @if (!isFullFacility) {
+        <div class="form-group">
+          <label for="seatsBooked">Seats</label>
+          <input id="seatsBooked" type="number" min="1" max="5" class="form-control" formControlName="seatsBooked">
+          @if (form.controls.seatsBooked.invalid && form.controls.seatsBooked.touched) {
+            <div class="form-error">Choose between 1 and 5 seats</div>
+          }
+        </div>
+      }
     </div>
     @if (timeRangeError) {
       <div class="form-error mt-sm">End time must be after start time.</div>
@@ -54,8 +71,34 @@
     }
     <div class="mt-lg">
       <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
-        {{ loading() ? 'Booking...' : 'Create Booking' }}
+        {{ loading() ? 'Booking...' : (isFullFacility ? '🏛️ Book Full Facility' : 'Create Booking') }}
       </button>
     </div>
   </form>
 </div></div>
+
+<style>
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    gap: 4px;
+  }
+  .capacity-badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 10px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+  }
+  .form-hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+</style>
+

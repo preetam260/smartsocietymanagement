@@ -96,6 +96,17 @@ public class VisitorController : ControllerBase
         return Ok(entry);
     }
 
+    [HttpPost("checkin-token")]
+    [Authorize(Roles = "SecurityStaff")]
+    public async Task<ActionResult<VisitorEntryResponseDto>> CheckInByToken([FromBody] CheckInByTokenDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Token))
+            return BadRequest(new { message = "QR token is required." });
+
+        var entry = await _visitorService.CheckInAsync(dto.Token, GetUserId());
+        return Ok(entry);
+    }
+
     [HttpPatch("{id:guid}/checkout")]
     [Authorize(Roles = "SecurityStaff")]
     public async Task<ActionResult<VisitorEntryResponseDto>> CheckOut(Guid id)

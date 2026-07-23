@@ -18,10 +18,11 @@ export interface BookingResponse {
 
 export interface CreateBookingDto {
   facilityId: string;
-  date: string;       
-  startTime: string;  
+  date: string;
+  startTime: string;
   endTime: string;
   seatsBooked: number;
+  bookFullFacility?: boolean;
 }
 
 export type AvailabilityLevel = 'Available' | 'FillingFast' | 'Full';

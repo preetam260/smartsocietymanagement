@@ -42,6 +42,7 @@ export class BookFacilityComponent implements OnInit {
     startTime: new FormControl('', [Validators.required]),
     endTime: new FormControl('', [Validators.required]),
     seatsBooked: new FormControl(1, [Validators.required, Validators.min(1), Validators.max(5)]),
+    bookFullFacility: new FormControl(false),
   }, { validators: timeRangeValidator });
 
   get timeRangeError() {
@@ -60,6 +61,25 @@ export class BookFacilityComponent implements OnInit {
     this.facilityService.getActive().subscribe(f => this.facilities.set(f));
   }
 
+  get isFullFacility() { return this.form.get('bookFullFacility')?.value === true; }
+
+  get selectedFacility() {
+    const id = this.form.value.facilityId;
+    return this.facilities().find(f => f.id === id);
+  }
+
+  onFullFacilityToggle() {
+    const ctrl = this.form.get('seatsBooked')!;
+    if (this.isFullFacility) {
+      ctrl.disable();
+      ctrl.clearValidators();
+    } else {
+      ctrl.enable();
+      ctrl.setValidators([Validators.required, Validators.min(1), Validators.max(5)]);
+    }
+    ctrl.updateValueAndValidity();
+  }
+
   onSubmit() {
     if (this.form.invalid) return;
     this.loading.set(true);
@@ -67,16 +87,18 @@ export class BookFacilityComponent implements OnInit {
     const date = this.form.value.date!;
     const startTime = this.form.value.startTime!;
     const endTime = this.form.value.endTime!;
+    const isFull = this.form.value.bookFullFacility ?? false;
 
     const startISO = new Date(`${date}T${startTime}:00`).toISOString();
     const endISO = new Date(`${date}T${endTime}:00`).toISOString();
 
     this.bookingService.create({
       facilityId: this.form.value.facilityId!,
-      date: date,          // ← send the date field so backend stores it correctly
+      date: date,
       startTime: startISO,
       endTime: endISO,
-      seatsBooked: Number(this.form.value.seatsBooked),
+      seatsBooked: isFull ? 1 : Number(this.form.getRawValue().seatsBooked),
+      bookFullFacility: isFull,
     }).subscribe({
       next: () => { this.toast.success('Booking created!'); this.router.navigate(['/bookings']); },
       error: () => this.loading.set(false)
